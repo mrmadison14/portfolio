@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meridian Fleet — AI Support Assistant (Demo)</title>
+<meta name="description" content="Interactive demo: multi-agent support triage with transparent intent classification and routing. Clean-room rebuild of a production system.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0e13'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23f0b23e'/%3E%3C/svg%3E">
 <style>
   :root{
     --bg:#0d1117; --panel:#161b22; --panel-2:#1c2430; --line:#2a3340;
@@ -60,6 +62,26 @@
   .typing span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:3px;animation:blink 1s infinite}
   .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
   @keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+  /* production architecture block */
+  details.arch{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:-6px 0 22px}
+  details.arch summary{cursor:pointer;padding:12px 14px;font-size:.85rem;color:var(--accent);font-weight:600;list-style:none}
+  details.arch summary::-webkit-details-marker{display:none}
+  details.arch summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+  details.arch[open] summary::before{transform:rotate(90deg)}
+  .archbody{padding:2px 14px 16px;border-top:1px solid var(--line)}
+  .archbody svg{width:100%;height:auto;display:block;margin:12px 0 6px}
+  .archbody svg .nd{fill:var(--panel-2);stroke:var(--line)}
+  .archbody svg .nd.dash{fill:none;stroke:var(--muted);stroke-dasharray:4 3}
+  .archbody svg text{fill:var(--text);font-family:var(--mono);font-size:11px}
+  .archbody svg .sm{fill:var(--muted);font-size:9.5px}
+  .archbody svg .edge{stroke:#5b6673;stroke-width:1.2;fill:none;marker-end:url(#arr)}
+  .archbody svg .edge.dash{stroke-dasharray:4 3}
+  table.pvd{width:100%;border-collapse:collapse;margin-top:10px}
+  .pvd th,.pvd td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top;font-size:.78rem}
+  .pvd th{color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:.68rem}
+  .pvd td:first-child{color:var(--muted);white-space:nowrap;padding-right:14px}
+  .pvd tr:last-child td{border-bottom:none}
+  button.chip{font-family:var(--sans)}
 </style>
 </head>
 <body>
@@ -81,6 +103,50 @@
     rule-based classifier <b>entirely in your browser</b> — no backend, no API keys — so you can see the
     routing logic and confidence scoring directly. <b>Meridian Fleet</b> is a fictional company; all data is fake.
   </div>
+
+  <details class="arch">
+    <summary>Production architecture, and what this demo simulates</summary>
+    <div class="archbody">
+      <svg viewBox="0 0 740 150" role="img" aria-label="Production architecture: channels feed an intake API, an LLM classifier routes to specialist agents, answers draw on retrieval over a curated knowledge base, and an eval suite gates every change.">
+        <defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#5b6673"/></marker></defs>
+        <rect class="nd" x="10" y="30" width="100" height="46" rx="8"/>
+        <text x="60" y="49" text-anchor="middle">Email · chat</text>
+        <text class="sm" x="60" y="63" text-anchor="middle">inbound channels</text>
+        <path class="edge" d="M110 53 H131"/>
+        <rect class="nd" x="134" y="30" width="100" height="46" rx="8"/>
+        <text x="184" y="49" text-anchor="middle">Intake API</text>
+        <text class="sm" x="184" y="63" text-anchor="middle">auth · logging</text>
+        <path class="edge" d="M234 53 H255"/>
+        <rect class="nd" x="258" y="30" width="100" height="46" rx="8"/>
+        <text x="308" y="49" text-anchor="middle">LLM classifier</text>
+        <text class="sm" x="308" y="63" text-anchor="middle">intent + confidence</text>
+        <path class="edge" d="M358 53 H379"/>
+        <rect class="nd" x="382" y="30" width="100" height="46" rx="8"/>
+        <text x="432" y="49" text-anchor="middle">Specialists</text>
+        <text class="sm" x="432" y="63" text-anchor="middle">5 agent domains</text>
+        <path class="edge" d="M482 53 H503"/>
+        <rect class="nd" x="506" y="30" width="100" height="46" rx="8"/>
+        <text x="556" y="49" text-anchor="middle">Retrieval</text>
+        <text class="sm" x="556" y="63" text-anchor="middle">curated KB</text>
+        <path class="edge" d="M606 53 H627"/>
+        <rect class="nd" x="630" y="30" width="100" height="46" rx="8"/>
+        <text x="680" y="49" text-anchor="middle">Reply</text>
+        <text class="sm" x="680" y="63" text-anchor="middle">human handoff</text>
+        <path class="edge dash" d="M308 76 V105"/>
+        <rect class="nd dash" x="196" y="108" width="224" height="30" rx="8"/>
+        <text class="sm" x="308" y="127" text-anchor="middle">eval suite gates every prompt &amp; model change</text>
+      </svg>
+      <table class="pvd">
+        <thead><tr><th></th><th>In this demo</th><th>In production</th></tr></thead>
+        <tbody>
+          <tr><td>Classifier</td><td>Keyword scoring you can read in view-source</td><td>LLM intent classification with confidence thresholds</td></tr>
+          <tr><td>Answers</td><td>Small canned knowledge base</td><td>Retrieval over curated, versioned knowledge</td></tr>
+          <tr><td>Change safety</td><td>Nothing to protect</td><td>Smoke + full eval suites gate every merge</td></tr>
+          <tr><td>Runtime</td><td>This HTML file, no backend</td><td>Monitored service with auth and logging</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
 
   <div class="grid">
     <div class="panel">
@@ -211,7 +277,7 @@ const samplesEl=document.getElementById('samples');
 const legend=document.getElementById('legend');
 
 SAMPLES.forEach(s=>{
-  const c=document.createElement('div'); c.className='chip'; c.textContent=s.length>42?s.slice(0,40)+'…':s;
+  const c=document.createElement('button'); c.type='button'; c.className='chip'; c.textContent=s.length>42?s.slice(0,40)+'…':s;
   c.title=s; c.onclick=()=>{ input.value=s; handle(); };
   samplesEl.appendChild(c);
 });
