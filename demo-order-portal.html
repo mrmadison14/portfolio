@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meridian Fleet — Hardware Order Portal (Demo)</title>
+<meta name="description" content="Interactive demo: a five-step hardware ordering flow with live validation and accessible form states. Sanitized front end of a production client portal.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0e13'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23f0b23e'/%3E%3C/svg%3E">
 <style>
   :root{
     --bg:#0d1117; --panel:#161b22; --panel-2:#1c2430; --line:#2a3340;
@@ -78,6 +80,23 @@
   .a11y{font-size:.78rem;color:var(--muted);margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
   .foot{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+  /* production architecture block */
+  details.arch{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:-6px 0 22px}
+  details.arch summary{cursor:pointer;padding:12px 14px;font-size:.85rem;color:var(--accent);font-weight:600;list-style:none}
+  details.arch summary::-webkit-details-marker{display:none}
+  details.arch summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+  details.arch[open] summary::before{transform:rotate(90deg)}
+  .archbody{padding:2px 14px 16px;border-top:1px solid var(--line)}
+  .archbody svg{width:100%;height:auto;display:block;margin:12px 0 6px}
+  .archbody svg .nd{fill:var(--panel-2);stroke:var(--line)}
+  .archbody svg text{fill:var(--text);font-family:ui-monospace,Menlo,monospace;font-size:11px}
+  .archbody svg .sm{fill:var(--muted);font-size:9.5px}
+  .archbody svg .edge{stroke:#5b6673;stroke-width:1.2;fill:none;marker-end:url(#arr)}
+  table.pvd{width:100%;border-collapse:collapse;margin-top:10px}
+  .pvd th,.pvd td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top;font-size:.78rem}
+  .pvd th{color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:.68rem}
+  .pvd td:first-child{color:var(--muted);white-space:nowrap;padding-right:14px}
+  .pvd tr:last-child td{border-bottom:none}
 </style>
 </head>
 <body>
@@ -98,6 +117,47 @@
     auth, server-side validation, security hardening, WCAG 2.2 AA). This demo runs the full multi-step flow and real-time
     validation <b>in your browser</b> — fake catalog, fake order numbers, no backend. <b>Meridian Fleet</b> is fictional.
   </div>
+
+  <details class="arch">
+    <summary>Production architecture, and what this demo simulates</summary>
+    <div class="archbody">
+      <svg viewBox="0 0 740 110" role="img" aria-label="Production architecture: an accessible browser UI served from a CDN talks to an API with authentication and sessions, server-side validation re-checks every rule, and the order service writes to vendor systems with an audit log.">
+        <defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#5b6673"/></marker></defs>
+        <rect class="nd" x="10" y="30" width="112" height="46" rx="8"/>
+        <text x="66" y="49" text-anchor="middle">Browser UI</text>
+        <text class="sm" x="66" y="63" text-anchor="middle">WCAG 2.2 AA</text>
+        <path class="edge" d="M122 53 H139"/>
+        <rect class="nd" x="142" y="30" width="112" height="46" rx="8"/>
+        <text x="198" y="49" text-anchor="middle">Static front end</text>
+        <text class="sm" x="198" y="63" text-anchor="middle">CDN</text>
+        <path class="edge" d="M254 53 H271"/>
+        <rect class="nd" x="274" y="30" width="112" height="46" rx="8"/>
+        <text x="330" y="49" text-anchor="middle">Auth + sessions</text>
+        <text class="sm" x="330" y="63" text-anchor="middle">API layer</text>
+        <path class="edge" d="M386 53 H403"/>
+        <rect class="nd" x="406" y="30" width="130" height="46" rx="8"/>
+        <text x="471" y="49" text-anchor="middle">Server validation</text>
+        <text class="sm" x="471" y="63" text-anchor="middle">same rules, re-enforced</text>
+        <path class="edge" d="M536 53 H553"/>
+        <rect class="nd" x="556" y="30" width="80" height="46" rx="8"/>
+        <text x="596" y="49" text-anchor="middle">Orders</text>
+        <text class="sm" x="596" y="63" text-anchor="middle">service</text>
+        <path class="edge" d="M636 53 H653"/>
+        <rect class="nd" x="656" y="30" width="74" height="46" rx="8"/>
+        <text x="693" y="49" text-anchor="middle">Vendors</text>
+        <text class="sm" x="693" y="63" text-anchor="middle">+ audit log</text>
+      </svg>
+      <table class="pvd">
+        <thead><tr><th></th><th>In this demo</th><th>In production</th></tr></thead>
+        <tbody>
+          <tr><td>Validation</td><td>Client-side, as you type</td><td>Same rules re-enforced server-side</td></tr>
+          <tr><td>Accounts</td><td>None; the session is pretend</td><td>Authenticated accounts, hardened sessions</td></tr>
+          <tr><td>Catalog &amp; orders</td><td>Fake data, fake order numbers</td><td>Live inventory, vendor integration, audit trail</td></tr>
+          <tr><td>Size</td><td>About 400 lines</td><td>About 18,000 lines, tests and docs included</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
 
   <div class="steps" role="list" aria-label="Checkout progress">
     <div class="step active" id="st1" role="listitem"><span class="n">1</span> Catalog</div>

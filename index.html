@@ -508,7 +508,7 @@
 
   <section class="band" aria-labelledby="how">
     <h2 id="how">How this gets built</h2>
-    <p>I engineer AI-agent workflows with the same discipline as any production system: <b>eval suites gate every change, pre-flight verification rules guard every write,</b> and automation earns trust incrementally. That process — Claude-based agent tooling with hard guardrails — is how one support team ships like a platform team.</p>
+    <p>I build with AI agents the way I build anything for production: <b>changes pass an eval suite before they merge, and writes pass a verification checklist before they happen.</b> The tools are Claude-based agent workflows. The guardrails are hard rules, each with a failure story behind it. The field notes below show how that works in practice.</p>
   </section>
 
   <section class="tier t-note" style="--tier-accent: var(--note)" aria-labelledby="t3">
@@ -516,7 +516,7 @@
     <div>
       <div class="tier-head">
         <h2 id="t3">Field notes</h2>
-        <p>True stories from production, identifying details removed. Full write-ups are on the way; the shape of each story is below.</p>
+        <p>True stories from production, identifying details removed.</p>
       </div>
       <div class="grid">
         <article class="card span4">
@@ -524,20 +524,23 @@
           <h3>Platform migration under load</h3>
           <p>Consolidating helpdesks across acquired brands without customers noticing: shadow-mode gating keyed to brand rather than trigger order, a leak monitor that caught the one that slipped, a staged 160-article knowledge-base migration, and a cutover runbook with a rollback at every step.</p>
           <div class="tags"><span class="tag">migration</span><span class="tag">monitoring</span><span class="tag">runbooks</span></div>
+          <a class="go" href="case-migration.html">Read the field note</a>
         </article>
 
         <article class="card span4">
           <div class="badge-row"><span class="badge note">Case study</span></div>
           <h3>Evaluating an LLM you actually ship</h3>
-          <p>A production support bot only merges through its eval harness: smoke and full suites, scoring rubrics, and a triage discipline that separates real regressions from judge variance. Red before green, every time.</p>
+          <p>A production support bot only merges through its eval harness: smoke and full suites, plus a triage discipline that separates real regressions from judge variance. Red before green, every time.</p>
           <div class="tags"><span class="tag">LLM evals</span><span class="tag">CI gating</span><span class="tag">test discipline</span></div>
+          <a class="go" href="case-llm-evals.html">Read the field note</a>
         </article>
 
         <article class="card span4">
           <div class="badge-row"><span class="badge note">Case study</span></div>
           <h3>Order ops, automated with guardrails</h3>
-          <p>PDF order intake to validated vendor orders through agent workflows: exact-match contact rules, live SKU verification, bundle decomposition, and a pre-flight check that stops any write that fails. Batches of 20-plus orders, zero wrong-place shipments.</p>
+          <p>PDF order intake to validated vendor orders through agent workflows: exact-match contact rules, live SKU verification, bundle decomposition, and a pre-flight check that stops any write that fails. Batches of twenty-plus orders, and the misdirected-shipment error class is gone.</p>
           <div class="tags"><span class="tag">agent workflows</span><span class="tag">document parsing</span><span class="tag">verification</span></div>
+          <a class="go" href="case-order-ops.html">Read the field note</a>
         </article>
       </div>
     </div>
@@ -555,7 +558,7 @@
     <div class="colophon-meta">
       <span>© 2026 James L. Madison</span>
       <span><a href="https://www.linkedin.com/in/jlm-madison" rel="noopener">linkedin.com/in/jlm-madison</a></span>
-      <span>updated 2026-07-01 · v1.0</span>
+      <span>updated 2026-07-01 · v1.1</span>
     </div>
   </footer>
 

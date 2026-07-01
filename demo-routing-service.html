@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meridian Fleet — Ticket Routing Service (Demo)</title>
+<meta name="description" content="Interactive simulator: a ticket-routing rules engine with HMAC-verified webhooks. Edit the rules and watch routing decisions change. Clean-room rebuild of a production microservice.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0e13'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23f0b23e'/%3E%3C/svg%3E">
 <style>
   :root{
     --bg:#0d1117; --panel:#161b22; --panel-2:#1c2430; --line:#2a3340;
@@ -61,6 +63,25 @@
   .legend{padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:7px}
   .lp{font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
   .foot{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;border-top:1px solid var(--line);padding-top:18px}
+  /* production architecture block */
+  details.arch{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:-6px 0 22px}
+  details.arch summary{cursor:pointer;padding:12px 14px;font-size:.85rem;color:var(--accent);font-weight:600;list-style:none}
+  details.arch summary::-webkit-details-marker{display:none}
+  details.arch summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+  details.arch[open] summary::before{transform:rotate(90deg)}
+  .archbody{padding:2px 14px 16px;border-top:1px solid var(--line)}
+  .archbody svg{width:100%;height:auto;display:block;margin:12px 0 6px}
+  .archbody svg .nd{fill:var(--panel-2);stroke:var(--line)}
+  .archbody svg .nd.dash{fill:none;stroke:var(--muted);stroke-dasharray:4 3}
+  .archbody svg text{fill:var(--text);font-family:var(--mono);font-size:11px}
+  .archbody svg .sm{fill:var(--muted);font-size:9.5px}
+  .archbody svg .edge{stroke:#5b6673;stroke-width:1.2;fill:none;marker-end:url(#arr)}
+  .archbody svg .edge.dash{stroke-dasharray:4 3}
+  table.pvd{width:100%;border-collapse:collapse;margin-top:10px}
+  .pvd th,.pvd td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top;font-size:.78rem}
+  .pvd th{color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:.68rem}
+  .pvd td:first-child{color:var(--muted);white-space:nowrap;padding-right:14px}
+  .pvd tr:last-child td{border-bottom:none}
 </style>
 </head>
 <body>
@@ -81,6 +102,46 @@
     Dockerized FastAPI service with HMAC-verified webhooks, handling 120–250 tickets/week). This simulator runs the real
     <b>rules engine</b> in your browser — toggle rules on/off and watch routing change in real time. <b>Meridian Fleet</b> is fictional; all tickets are fake.
   </div>
+
+  <details class="arch">
+    <summary>Production architecture, and what this demo simulates</summary>
+    <div class="archbody">
+      <svg viewBox="0 0 740 165" role="img" aria-label="Production architecture: a helpdesk webhook is verified with HMAC-SHA256, a Dockerized FastAPI service evaluates the rules engine, and the ticket is posted to the right chat channel with an assignee. A pytest suite and structured logs back the service.">
+        <defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#5b6673"/></marker></defs>
+        <rect class="nd" x="10" y="25" width="124" height="46" rx="8"/>
+        <text x="72" y="44" text-anchor="middle">Helpdesk webhook</text>
+        <text class="sm" x="72" y="58" text-anchor="middle">ticket created</text>
+        <path class="edge" d="M134 48 H153"/>
+        <rect class="nd" x="156" y="25" width="124" height="46" rx="8"/>
+        <text x="218" y="44" text-anchor="middle">HMAC-SHA256</text>
+        <text class="sm" x="218" y="58" text-anchor="middle">reject on mismatch</text>
+        <path class="edge" d="M280 48 H299"/>
+        <rect class="nd" x="302" y="25" width="124" height="46" rx="8"/>
+        <text x="364" y="44" text-anchor="middle">FastAPI service</text>
+        <text class="sm" x="364" y="58" text-anchor="middle">Docker</text>
+        <path class="edge" d="M426 48 H445"/>
+        <rect class="nd" x="448" y="25" width="124" height="46" rx="8"/>
+        <text x="510" y="44" text-anchor="middle">Rules engine</text>
+        <text class="sm" x="510" y="58" text-anchor="middle">priority · product · keyword</text>
+        <path class="edge" d="M572 48 H591"/>
+        <rect class="nd" x="594" y="25" width="136" height="46" rx="8"/>
+        <text x="662" y="44" text-anchor="middle">Chat channel</text>
+        <text class="sm" x="662" y="58" text-anchor="middle">+ assignee</text>
+        <path class="edge dash" d="M364 71 V102"/>
+        <rect class="nd dash" x="229" y="105" width="270" height="30" rx="8"/>
+        <text class="sm" x="364" y="124" text-anchor="middle">pytest suite · structured logs · rules config reviewed like code</text>
+      </svg>
+      <table class="pvd">
+        <thead><tr><th></th><th>In this demo</th><th>In production</th></tr></thead>
+        <tbody>
+          <tr><td>Rules engine</td><td>Same first-match-wins logic, editable live</td><td>Versioned config, changes reviewed like code</td></tr>
+          <tr><td>Webhook auth</td><td>Badge shown per ticket</td><td>HMAC-SHA256 verified before any processing</td></tr>
+          <tr><td>Delivery</td><td>Rendered in the feed panel</td><td>Posts to chat channels and assigns an agent</td></tr>
+          <tr><td>Quality</td><td>Not simulated</td><td>pytest suite, Docker image, structured logs</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
 
   <div class="controls">
     <button class="btn primary" id="play">▶ Start stream</button>

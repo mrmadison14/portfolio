@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meridian Fleet — On-Call Paging Service (Demo)</title>
+<meta name="description" content="Interactive simulator: webhook-to-SMS on-call paging with a 15-minute acknowledgment timer and automatic escalation. Clean-room rebuild of a production system.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0e13'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23f0b23e'/%3E%3C/svg%3E">
 <style>
   :root{
     --bg:#0d1117; --panel:#161b22; --panel-2:#1c2430; --line:#2a3340;
@@ -69,6 +71,25 @@
   @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
   .sms-preview .hdr{font-size:.7rem;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
   .foot{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;border-top:1px solid var(--line);padding-top:18px}
+  /* production architecture block */
+  details.arch{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:-6px 0 22px}
+  details.arch summary{cursor:pointer;padding:12px 14px;font-size:.85rem;color:var(--accent);font-weight:600;list-style:none}
+  details.arch summary::-webkit-details-marker{display:none}
+  details.arch summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+  details.arch[open] summary::before{transform:rotate(90deg)}
+  .archbody{padding:2px 14px 16px;border-top:1px solid var(--line)}
+  .archbody svg{width:100%;height:auto;display:block;margin:12px 0 6px}
+  .archbody svg .nd{fill:var(--panel-2);stroke:var(--line)}
+  .archbody svg .nd.dash{fill:none;stroke:var(--muted);stroke-dasharray:4 3}
+  .archbody svg text{fill:var(--text);font-family:var(--mono);font-size:11px}
+  .archbody svg .sm{fill:var(--muted);font-size:9.5px}
+  .archbody svg .edge{stroke:#5b6673;stroke-width:1.2;fill:none;marker-end:url(#arr)}
+  .archbody svg .edge.dash{stroke-dasharray:4 3}
+  table.pvd{width:100%;border-collapse:collapse;margin-top:10px}
+  .pvd th,.pvd td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top;font-size:.78rem}
+  .pvd th{color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:.68rem}
+  .pvd td:first-child{color:var(--muted);white-space:nowrap;padding-right:14px}
+  .pvd tr:last-child td{border-bottom:none}
 </style>
 </head>
 <body>
@@ -89,6 +110,49 @@
     a queue, a scheduler, and an SMS provider). This simulator runs the real <b>state machine</b> in your browser — trigger an
     alert, watch the page fire, then acknowledge it or let the 15-minute timer lapse to see escalation. <b>Meridian Fleet</b> is fictional; no SMS is sent.
   </div>
+
+  <details class="arch">
+    <summary>Production architecture, and what this demo simulates</summary>
+    <div class="archbody">
+      <svg viewBox="0 0 740 185" role="img" aria-label="Production architecture: a helpdesk trigger hits an HMAC-verified webhook endpoint, a serverless function looks up the on-call schedule and pages via an SMS provider, a durable scheduler enforces the 15-minute acknowledgment deadline, and unacknowledged pages escalate to the secondary and manager.">
+        <defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#5b6673"/></marker></defs>
+        <rect class="nd" x="15" y="25" width="140" height="46" rx="8"/>
+        <text x="85" y="44" text-anchor="middle">Helpdesk trigger</text>
+        <text class="sm" x="85" y="58" text-anchor="middle">high-priority ticket</text>
+        <path class="edge" d="M155 48 H192"/>
+        <rect class="nd" x="195" y="25" width="140" height="46" rx="8"/>
+        <text x="265" y="44" text-anchor="middle">Webhook endpoint</text>
+        <text class="sm" x="265" y="58" text-anchor="middle">HMAC verified</text>
+        <path class="edge" d="M335 48 H372"/>
+        <rect class="nd" x="375" y="25" width="140" height="46" rx="8"/>
+        <text x="445" y="44" text-anchor="middle">On-call lookup</text>
+        <text class="sm" x="445" y="58" text-anchor="middle">serverless fn · roster</text>
+        <path class="edge" d="M515 48 H552"/>
+        <rect class="nd" x="555" y="25" width="140" height="46" rx="8"/>
+        <text x="625" y="44" text-anchor="middle">SMS provider</text>
+        <text class="sm" x="625" y="58" text-anchor="middle">page + receipts</text>
+        <path class="edge" d="M445 71 V112"/>
+        <rect class="nd" x="375" y="115" width="140" height="46" rx="8"/>
+        <text x="445" y="134" text-anchor="middle">Scheduler</text>
+        <text class="sm" x="445" y="148" text-anchor="middle">15-min ack deadline</text>
+        <path class="edge" d="M515 138 H552"/>
+        <rect class="nd" x="555" y="115" width="150" height="46" rx="8"/>
+        <text x="630" y="134" text-anchor="middle">Escalation</text>
+        <text class="sm" x="630" y="148" text-anchor="middle">secondary + manager</text>
+        <path class="edge dash" d="M625 71 V95 H500 V112"/>
+        <text class="sm" x="540" y="90" text-anchor="middle">ACK reply cancels deadline</text>
+      </svg>
+      <table class="pvd">
+        <thead><tr><th></th><th>In this demo</th><th>In production</th></tr></thead>
+        <tbody>
+          <tr><td>Timer</td><td>Browser interval with a speed control</td><td>Durable scheduler that survives restarts</td></tr>
+          <tr><td>Page delivery</td><td>Simulated SMS preview</td><td>SMS provider with delivery receipts</td></tr>
+          <tr><td>Trigger</td><td>A button</td><td>Helpdesk webhook, HMAC-verified</td></tr>
+          <tr><td>State machine</td><td>Same transitions, in-page</td><td>Queue-backed, idempotent event handling</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
 
   <div class="controls">
     <select id="sev">
