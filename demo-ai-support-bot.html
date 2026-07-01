@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Fleet — AI Support Assistant (Demo)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel-2:#1c2430; --line:#2a3340;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#2dd4bf; --accent-2:#38bdf8;
+    --good:#34d399; --warn:#fbbf24; --bad:#f87171; --purple:#a78bfa;
+    --radius:12px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5}
+  a{color:var(--accent-2);text-decoration:none}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 20px 64px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:800;color:#04201d;font-size:18px}
+  h1{font-size:1.25rem;margin:0}
+  .sub{color:var(--muted);font-size:.85rem}
+  .back{font-size:.85rem;color:var(--muted)}
+  .banner{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px 14px;font-size:.85rem;color:var(--muted);margin:16px 0 22px}
+  .banner b{color:var(--text)}
+  .grid{display:grid;grid-template-columns:1fr 340px;gap:20px}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+  .panel h2{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .chat{padding:16px;min-height:300px;max-height:460px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+  .msg{max-width:88%;padding:11px 14px;border-radius:12px;font-size:.92rem;animation:fade .3s ease}
+  .msg.user{align-self:flex-end;background:var(--accent-2);color:#04222e;border-bottom-right-radius:3px}
+  .msg.bot{align-self:flex-start;background:var(--panel-2);border:1px solid var(--line);border-bottom-left-radius:3px}
+  .msg.bot .agenttag{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;color:var(--accent)}
+  .dot{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .composer{border-top:1px solid var(--line);padding:14px 16px}
+  .samples{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .chip{background:var(--panel-2);border:1px solid var(--line);color:var(--muted);font-size:.78rem;padding:6px 11px;border-radius:999px;cursor:pointer;transition:.15s}
+  .chip:hover{border-color:var(--accent);color:var(--text)}
+  .inputrow{display:flex;gap:10px}
+  textarea{flex:1;resize:none;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:11px 13px;font-family:var(--sans);font-size:.92rem;height:46px}
+  textarea:focus{outline:none;border-color:var(--accent)}
+  button.send{background:var(--accent);color:#04201d;border:none;border-radius:10px;padding:0 20px;font-weight:700;cursor:pointer;font-size:.92rem}
+  button.send:hover{filter:brightness(1.08)}
+  /* routing side panel */
+  .route{padding:16px}
+  .stage{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;background:var(--panel-2);opacity:.4;transition:.35s}
+  .stage.on{opacity:1;border-color:var(--accent)}
+  .stage .ico{width:30px;height:30px;border-radius:8px;background:var(--bg);display:grid;place-items:center;flex:none;font-size:15px}
+  .stage .t{font-size:.82rem;font-weight:600}
+  .stage .d{font-size:.74rem;color:var(--muted);margin-top:2px}
+  .meter{height:7px;background:var(--bg);border-radius:99px;overflow:hidden;margin-top:8px}
+  .meter > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0;transition:width .5s}
+  .kw{display:inline-block;font-family:var(--mono);font-size:.72rem;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px;margin:2px 3px 0 0;color:var(--accent)}
+  .agents-legend{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 16px}
+  .legpill{font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+  .foot{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;border-top:1px solid var(--line);padding-top:18px}
+  .typing span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:3px;animation:blink 1s infinite}
+  .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">M</div>
+      <div>
+        <h1>Meridian Fleet — AI Support Assistant</h1>
+        <div class="sub">Multi-agent intent classification &amp; routing · interactive demo</div>
+      </div>
+    </div>
+    <a class="back" href="index.html">← Portfolio</a>
+  </div>
+
+  <div class="banner">
+    <b>What's real vs. simulated:</b> This is a sanitized rebuild of a production multi-agent support bot.
+    The live version uses an LLM with retrieval over curated knowledge. This demo runs a transparent,
+    rule-based classifier <b>entirely in your browser</b> — no backend, no API keys — so you can see the
+    routing logic and confidence scoring directly. <b>Meridian Fleet</b> is a fictional company; all data is fake.
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Support Console</h2>
+      <div class="chat" id="chat">
+        <div class="msg bot">
+          <div class="agenttag"><span class="dot"></span>Triage</div>
+          Hi — I'm the Meridian Fleet support assistant. Describe your issue and I'll route you to the right
+          specialist. Try one of the sample messages below.
+        </div>
+      </div>
+      <div class="composer">
+        <div class="samples" id="samples"></div>
+        <div class="inputrow">
+          <textarea id="input" placeholder="Type a support message…" aria-label="Support message"></textarea>
+          <button class="send" id="send">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Routing Pipeline</h2>
+      <div class="route">
+        <div class="stage" id="s1"><div class="ico">📥</div><div><div class="t">Message received</div><div class="d" id="s1d">Awaiting input…</div></div></div>
+        <div class="stage" id="s2"><div class="ico">🧭</div><div style="flex:1"><div class="t">Intent classification</div><div class="d" id="s2d">—</div><div class="meter"><i id="conf"></i></div></div></div>
+        <div class="stage" id="s3"><div class="ico">🎯</div><div><div class="t">Routed to specialist</div><div class="d" id="s3d">—</div></div></div>
+        <div class="stage" id="s4"><div class="ico">💬</div><div><div class="t">Specialist response</div><div class="d" id="s4d">—</div></div></div>
+      </div>
+      <div class="agents-legend" id="legend"></div>
+    </div>
+  </div>
+
+  <div class="foot">Sanitized portfolio demo · built by James L. Madison · no production data or credentials</div>
+</div>
+
+<script>
+/* ---- Specialist agents + intent model (rule-based, transparent) ---- */
+const AGENTS = {
+  diag:   {name:"Device Diagnostics", color:"#38bdf8", icon:"📡",
+    kw:{offline:3,"not reporting":4,"no data":4,gps:2,signal:3,heartbeat:3,ping:2,dead:3,led:2,light:2,blinking:2,power:2,reporting:2,"last seen":3,disconnected:3}},
+  hw:     {name:"Hardware & Harness", color:"#2dd4bf", icon:"🔌",
+    kw:{harness:5,cable:3,wiring:3,connector:3,install:2,"which device":4,compatible:3,obd:3,adapter:3,model:2,vehicle:2,pinout:4,"part number":3}},
+  config: {name:"Configuration", color:"#a78bfa", icon:"⚙️",
+    kw:{config:4,configure:4,settings:3,setup:3,parameter:3,ignition:3,geofence:4,provision:4,activate:3,"firmware":3,calibrate:3,threshold:3}},
+  trouble:{name:"Troubleshooting", color:"#fbbf24", icon:"🛠️",
+    kw:{error:3,"not working":4,broken:3,issue:2,problem:2,fix:2,reset:3,reboot:3,fault:3,"error code":4,crash:3,freeze:3,stuck:3}},
+  billing:{name:"Billing & Account", color:"#f472b6", icon:"💳",
+    kw:{invoice:4,billing:4,charge:3,payment:3,subscription:4,plan:2,account:2,renew:3,cancel:3,refund:3,price:2,upgrade:2,seats:3}},
+};
+const FALLBACK = {name:"General Support", color:"#9aa7b4", icon:"🗂️"};
+
+/* Knowledge base — short canned answers keyed to sub-signals */
+const KB = {
+  diag:{
+    default:"I see a device-connectivity issue. First, confirm the unit has power (solid status LED). If the LED is off, check the harness seating. If it's on but you see no data, the unit may have lost cellular signal — devices auto-reconnect within ~15 min of regaining coverage. I can open a diagnostics ticket and pull the last-seen timestamp for the affected unit(s).",
+    led:"A blinking or off status LED usually points to power or harness seating rather than the network. Reseat the harness connector until it clicks, confirm the LED goes solid, and the unit should re-register within a few minutes.",
+    signal:"No-signal / no-data devices are almost always coverage or antenna related. The unit buffers data offline and uploads on reconnect, so you typically lose visibility but not the data itself. Want me to flag the unit for a coverage check?"
+  },
+  hw:{
+    default:"For hardware and harness selection I'll match the right part to the vehicle. The M-Series uses three harness types: H1 (standard OBD-II), H2 (2-wire ignition-sense), and H3 (heavy-duty/J1939). Tell me the vehicle class and I'll confirm the correct harness and device model.",
+    obd:"For OBD-II vehicles use the H1 plug-and-play harness with an M5 or M7 unit — no splicing required. Installs in under five minutes.",
+    heavy:"Heavy-duty / J1939 vehicles need the H3 harness paired with an M9 unit for full engine-bus telemetry."
+  },
+  config:{
+    default:"Configuration changes are pushed over the air. Common ones: ignition-sense source, reporting interval, geofences, and speed/idle thresholds. Tell me what behavior you want and I'll give you the exact parameter and the rollout steps.",
+    geofence:"Geofences are defined in the platform under Fleet → Zones, then assigned to a device group. Entry/exit events fire within ~30s of the boundary crossing once the config syncs.",
+    interval:"Reporting interval is set per device group. The default is 60s moving / 15min parked; tightening it increases data resolution and cellular usage proportionally."
+  },
+  trouble:{
+    default:"Let's troubleshoot. Can you share the exact error text or code? In the meantime, a soft reset (hold the function button 10s until the LED double-blinks) clears most transient faults without affecting stored config.",
+    code:"Error codes in the E2xx range are configuration mismatches and clear after a re-sync; E4xx codes indicate a hardware fault and usually need an RMA. Share the exact code and I'll confirm the path.",
+    reset:"A soft reset (10s button hold) is safe and keeps your config. A factory reset wipes provisioning and should only be done with support on the line."
+  },
+  billing:{
+    default:"I can help with account and billing. For invoices, plan changes, and renewals I'll route you to the account team — note that I can't process payments here. What's the account name or invoice number you're asking about?",
+    invoice:"Invoices are issued monthly per active device. If a line looks wrong, it's usually a device that was deactivated mid-cycle — those prorate on the following invoice.",
+    cancel:"Cancellations and plan downgrades take effect at the end of the current billing period; devices keep reporting until then."
+  },
+  fallback:{default:"Thanks — that one doesn't map cleanly to a single specialist, so I'd route it to general support with a short summary and the customer's context attached. In production the assistant would also ask one clarifying question to disambiguate before routing."}
+};
+
+const SAMPLES = [
+  "My M7 unit has been offline since yesterday and shows no GPS data",
+  "Which harness do I need for a heavy-duty truck on the J1939 bus?",
+  "How do I set up a geofence and change the reporting interval?",
+  "Device is throwing error code E412 and won't reboot",
+  "I think our last invoice double-charged us for 12 deactivated devices",
+  "Can someone help me with our account?"
+];
+
+/* ---- Classifier ---- */
+function classify(text){
+  const t=" "+text.toLowerCase()+" ";
+  const scores={};
+  const hits={};
+  for(const [id,a] of Object.entries(AGENTS)){
+    let s=0; const h=[];
+    for(const [k,w] of Object.entries(a.kw)){
+      if(t.includes(k)){ s+=w; h.push(k); }
+    }
+    scores[id]=s; hits[id]=h;
+  }
+  let best=null,bestScore=0,total=0;
+  for(const id in scores){ total+=scores[id]; if(scores[id]>bestScore){bestScore=scores[id];best=id;} }
+  // confidence: best share of total, scaled; min floor when something matched
+  let conf = total>0 ? Math.min(0.98, 0.45 + (bestScore/Math.max(total,1))*0.55) : 0;
+  if(bestScore===0){ return {id:"fallback",conf:0,hits:[],agent:FALLBACK}; }
+  return {id:best,conf,hits:hits[best],agent:AGENTS[best]};
+}
+
+/* pick a KB sub-answer based on secondary keywords */
+function answerFor(id,text){
+  const t=text.toLowerCase();
+  if(id==="fallback") return KB.fallback.default;
+  const bank=KB[id];
+  if(id==="diag"){ if(/led|light|blink/.test(t))return bank.led; if(/signal|gps|no data|coverage/.test(t))return bank.signal; }
+  if(id==="hw"){ if(/obd/.test(t))return bank.obd; if(/heavy|j1939|truck/.test(t))return bank.heavy; }
+  if(id==="config"){ if(/geofence|zone/.test(t))return bank.geofence; if(/interval|reporting/.test(t))return bank.interval; }
+  if(id==="trouble"){ if(/code|e\d{3}/.test(t))return bank.code; if(/reset|reboot/.test(t))return bank.reset; }
+  if(id==="billing"){ if(/invoice|charge|double/.test(t))return bank.invoice; if(/cancel|downgrade/.test(t))return bank.cancel; }
+  return bank.default;
+}
+
+/* ---- UI wiring ---- */
+const chat=document.getElementById('chat');
+const input=document.getElementById('input');
+const samplesEl=document.getElementById('samples');
+const legend=document.getElementById('legend');
+
+SAMPLES.forEach(s=>{
+  const c=document.createElement('div'); c.className='chip'; c.textContent=s.length>42?s.slice(0,40)+'…':s;
+  c.title=s; c.onclick=()=>{ input.value=s; handle(); };
+  samplesEl.appendChild(c);
+});
+Object.values(AGENTS).forEach(a=>{
+  const p=document.createElement('span'); p.className='legpill'; p.textContent=a.icon+' '+a.name; legend.appendChild(p);
+});
+
+function addMsg(text,who,agent){
+  const m=document.createElement('div'); m.className='msg '+who;
+  if(who==='bot'&&agent){
+    const tag=document.createElement('div'); tag.className='agenttag';
+    tag.innerHTML='<span class="dot" style="color:'+agent.color+'"></span>'+agent.icon+' '+agent.name;
+    m.appendChild(tag);
+  }
+  m.appendChild(document.createTextNode(text));
+  chat.appendChild(m); chat.scrollTop=chat.scrollHeight; return m;
+}
+function setStage(n,on,detail){
+  const s=document.getElementById('s'+n); s.classList.toggle('on',on);
+  if(detail!=null) document.getElementById('s'+n+'d').innerHTML=detail;
+}
+function resetStages(){ [1,2,3,4].forEach(n=>setStage(n,false)); document.getElementById('conf').style.width='0'; }
+
+async function handle(){
+  const text=input.value.trim(); if(!text) return;
+  addMsg(text,'user'); input.value='';
+  resetStages();
+  await wait(150); setStage(1,true,'Received '+text.length+' chars');
+  await wait(450);
+  const r=classify(text);
+  const pct=Math.round(r.conf*100);
+  const kwHtml = r.hits.length ? r.hits.slice(0,5).map(k=>'<span class="kw">'+k+'</span>').join('') : '<span class="d">no strong signal</span>';
+  setStage(2,true,'Top intent: <b style="color:'+r.agent.color+'">'+r.agent.name+'</b> · '+pct+'% confidence<br>'+kwHtml);
+  document.getElementById('conf').style.width=pct+'%';
+  await wait(650);
+  if(r.conf>0 && r.conf<0.55){
+    setStage(3,true,'Low confidence — would ask 1 clarifying question');
+  }else{
+    setStage(3,true,'→ '+r.agent.name);
+  }
+  // typing indicator
+  const typing=addMsg('','bot',r.agent); typing.innerHTML+='<span class="typing"><span></span><span></span><span></span></span>';
+  await wait(750);
+  typing.remove();
+  const ans=answerFor(r.id,text);
+  addMsg(ans,'bot',r.agent);
+  setStage(4,true,'Delivered');
+}
+function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+document.getElementById('send').onclick=handle;
+input.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handle();}});
+</script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Fleet — Ticket Routing Service (Demo)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel-2:#1c2430; --line:#2a3340;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#2dd4bf; --accent-2:#38bdf8;
+    --good:#34d399; --warn:#fbbf24; --bad:#f87171; --purple:#a78bfa; --pink:#f472b6;
+    --radius:12px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5}
+  .wrap{max-width:1120px;margin:0 auto;padding:24px 20px 64px}
+  a{color:var(--accent-2);text-decoration:none}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:800;color:#04201d;font-size:18px}
+  h1{font-size:1.25rem;margin:0}.sub{color:var(--muted);font-size:.85rem}.back{font-size:.85rem;color:var(--muted)}
+  .banner{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px 14px;font-size:.85rem;color:var(--muted);margin:16px 0 22px}
+  .banner b{color:var(--text)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+  button.btn{border:none;border-radius:9px;padding:10px 18px;font-weight:700;cursor:pointer;font-size:.88rem}
+  button.primary{background:var(--accent);color:#04201d}button.primary:hover{filter:brightness(1.08)}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .stats{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 13px;font-size:.78rem;color:var(--muted)}
+  .stat b{color:var(--text);font-size:1.05rem;display:block}
+  .grid{display:grid;grid-template-columns:330px 1fr;gap:20px}
+  @media(max-width:920px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+  .panel h2{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0;padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  /* rules */
+  .rules{padding:12px 14px}
+  .rule{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:9px;background:var(--panel-2);font-size:.8rem;display:flex;gap:10px;align-items:flex-start;transition:.2s}
+  .rule.off{opacity:.4}
+  .rule.firing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+  .rule .tog{flex:none;margin-top:2px}
+  .rule .cond{font-family:var(--mono);font-size:.74rem;color:var(--accent)}
+  .rule .arrow{color:var(--muted)}
+  .rule .dest{font-weight:600}
+  .order{color:#5b6673;font-family:var(--mono);font-size:.72rem;margin-right:2px}
+  /* feed */
+  .feed{padding:10px 14px;max-height:520px;overflow-y:auto}
+  .ticket{border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:10px;background:var(--panel-2);animation:slidein .35s ease}
+  @keyframes slidein{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+  .ticket .head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:6px}
+  .ticket .id{font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+  .pri{font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase}
+  .pri.urgent{background:#3a0d0d;color:var(--bad)}.pri.high{background:#3a2a00;color:var(--warn)}.pri.normal{background:#1c2430;color:var(--muted)}
+  .ticket .subj{font-size:.9rem;margin-bottom:8px}
+  .routed{display:flex;align-items:center;gap:8px;font-size:.8rem;border-top:1px solid var(--line);padding-top:8px}
+  .chan{font-family:var(--mono);font-weight:700}
+  .tag{font-size:.68rem;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--muted)}
+  .matched{color:var(--accent);font-size:.74rem;font-family:var(--mono)}
+  .hmac{font-size:.7rem;color:var(--good);font-family:var(--mono)}
+  .empty{color:var(--muted);font-size:.85rem;padding:24px;text-align:center}
+  .legend{padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:7px}
+  .lp{font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+  .foot{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;border-top:1px solid var(--line);padding-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">M</div>
+      <div>
+        <h1>Meridian Fleet — Ticket Routing Service</h1>
+        <div class="sub">Rules engine · HMAC-verified webhooks · channel/agent routing · interactive simulator</div>
+      </div>
+    </div>
+    <a class="back" href="index.html">← Portfolio</a>
+  </div>
+
+  <div class="banner">
+    <b>What's real vs. simulated:</b> Sanitized rebuild of a production ticket-routing microservice (live version: tested,
+    Dockerized FastAPI service with HMAC-verified webhooks, handling 120–250 tickets/week). This simulator runs the real
+    <b>rules engine</b> in your browser — toggle rules on/off and watch routing change in real time. <b>Meridian Fleet</b> is fictional; all tickets are fake.
+  </div>
+
+  <div class="controls">
+    <button class="btn primary" id="play">▶ Start stream</button>
+    <button class="btn ghost" id="one">+1 ticket</button>
+    <button class="btn ghost" id="clear">Clear</button>
+    <div class="stats">
+      <div class="stat"><b id="stTotal">0</b>routed</div>
+      <div class="stat"><b id="stRate">0</b>per min (sim)</div>
+      <div class="stat"><b id="stRules">5</b>active rules</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Routing Rules <span class="sub" style="text-transform:none;letter-spacing:0">top → bottom</span></h2>
+      <div class="rules" id="rules"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Live Routing Feed</h2>
+      <div class="feed" id="feed"><div class="empty">Press <b>Start stream</b> or <b>+1 ticket</b> to see routing decisions.</div></div>
+    </div>
+  </div>
+
+  <div class="foot">Sanitized portfolio demo · built by James L. Madison · no production data or credentials</div>
+</div>
+
+<script>
+/* ---- Rules (evaluated top-to-bottom; first match wins, except priority overlay) ---- */
+const RULES=[
+  {id:"r1",on:true,label:"Priority = Urgent",cond:'priority == "urgent"',test:t=>t.priority==='urgent',chan:"#oncall-escalations",color:"var(--bad)"},
+  {id:"r2",on:true,label:"Product = Devices/Hardware",cond:'product in {device, harness}',test:t=>['device','harness'].includes(t.product),chan:"#team-hardware",color:"var(--accent)"},
+  {id:"r3",on:true,label:"Product = Platform/Config",cond:'product == "platform"',test:t=>t.product==='platform',chan:"#team-platform",color:"var(--purple)"},
+  {id:"r4",on:true,label:"Keyword = billing/invoice",cond:'subject ~ /billing|invoice|charge/',test:t=>/billing|invoice|charge|refund/i.test(t.subject),chan:"#team-accounts",color:"var(--pink)"},
+  {id:"r5",on:true,label:"Default catch-all",cond:'* (no match above)',test:t=>true,chan:"#support-triage",color:"var(--muted)"},
+];
+
+const PRODUCTS=['device','harness','platform','account','other'];
+const SUBJECTS={
+  device:["M7 unit offline since this morning","No GPS data from 4 devices","Device LED blinking red","Unit not reporting after install"],
+  harness:["Which harness for a box truck?","H3 connector doesn't fit","Need pinout for ignition harness","Wrong harness shipped"],
+  platform:["How do I create a geofence?","Reporting interval won't save","Need to provision 30 new devices","Firmware update stuck"],
+  account:["Invoice looks double-charged","Want to upgrade our plan","Billing contact change","Refund for deactivated units"],
+  other:["General question about coverage","Can you export our trip data?","Onboarding a new depot","Feedback on the dashboard"],
+};
+const PRIOS=['urgent','high','normal','normal','normal'];
+
+/* render rules */
+const rulesEl=document.getElementById('rules');
+function renderRules(){
+  rulesEl.innerHTML='';
+  RULES.forEach((r,i)=>{
+    const d=document.createElement('div');d.className='rule'+(r.on?'':' off');d.id='rule_'+r.id;
+    d.innerHTML=`<input class="tog" type="checkbox" ${r.on?'checked':''} aria-label="Toggle ${r.label}">
+      <div style="flex:1"><span class="order">${i+1}.</span> <b>${r.label}</b><br>
+      <span class="cond">${r.cond}</span> <span class="arrow">→</span> <span class="dest" style="color:${r.color}">${r.chan}</span></div>`;
+    d.querySelector('input').onchange=e=>{r.on=e.target.checked;d.classList.toggle('off',!r.on);updateRuleCount();};
+    rulesEl.appendChild(d);
+  });
+}
+renderRules();
+const legend=document.getElementById('legend');
+[...new Set(RULES.map(r=>r.chan))].forEach(c=>{const s=document.createElement('span');s.className='lp';s.textContent=c;legend.appendChild(s);});
+function updateRuleCount(){document.getElementById('stRules').textContent=RULES.filter(r=>r.on).length;}
+
+/* routing logic — first active rule whose test passes */
+function route(t){
+  for(const r of RULES){ if(r.on && r.test(t)) return r; }
+  return RULES[RULES.length-1]; // safety net
+}
+const AGENTS=["A. Rivera","K. Osei","M. Lind","T. Cho","S. Patel"];
+
+let total=0;
+const feed=document.getElementById('feed');
+function makeTicket(){
+  const product=PRODUCTS[Math.floor(Math.random()*PRODUCTS.length)];
+  const subj=SUBJECTS[product][Math.floor(Math.random()*SUBJECTS[product].length)];
+  let priority=PRIOS[Math.floor(Math.random()*PRIOS.length)];
+  // billing subjects bias to account product
+  const t={id:"ZD-"+Math.floor(10000+Math.random()*89999),product,subject:subj,priority};
+  return t;
+}
+function emit(){
+  if(total===0)feed.innerHTML='';
+  const t=makeTicket();
+  const r=route(t);
+  total++;
+  document.getElementById('stTotal').textContent=total;
+  // flash firing rule
+  const rr=document.getElementById('rule_'+r.id);if(rr){rr.classList.add('firing');setTimeout(()=>rr.classList.remove('firing'),600);}
+  const agent=AGENTS[Math.floor(Math.random()*AGENTS.length)];
+  const el=document.createElement('div');el.className='ticket';
+  el.innerHTML=`<div class="head"><span class="id">${t.id}</span><span class="pri ${t.priority}">${t.priority}</span></div>
+    <div class="subj">${t.subject}</div>
+    <div style="margin-bottom:6px"><span class="tag">product: ${t.product}</span></div>
+    <div class="hmac">✓ HMAC-SHA256 signature verified</div>
+    <div class="routed"><span>→ routed to</span> <span class="chan" style="color:${r.color}">${r.chan}</span> <span class="tag">@${agent}</span></div>
+    <div class="matched">matched: ${r.label}</div>`;
+  feed.insertBefore(el,feed.firstChild);
+  while(feed.children.length>30)feed.removeChild(feed.lastChild);
+}
+
+let stream=null, count=0, windowStart=Date.now();
+document.getElementById('one').onclick=emit;
+document.getElementById('play').onclick=function(){
+  if(stream){clearInterval(stream);stream=null;this.textContent='▶ Start stream';return;}
+  this.textContent='⏸ Pause stream';
+  stream=setInterval(()=>{emit();count++;
+    const mins=(Date.now()-windowStart)/60000;document.getElementById('stRate').textContent=mins>0?Math.round(count/mins):count;
+  },900);
+};
+document.getElementById('clear').onclick=()=>{total=0;count=0;windowStart=Date.now();document.getElementById('stTotal').textContent='0';document.getElementById('stRate').textContent='0';feed.innerHTML='<div class="empty">Cleared. Press <b>Start stream</b> or <b>+1 ticket</b>.</div>';};
+updateRuleCount();
+</script>
+</body>
+</html>
