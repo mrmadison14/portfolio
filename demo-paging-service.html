@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Fleet — On-Call Paging Service (Demo)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel-2:#1c2430; --line:#2a3340;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#2dd4bf; --accent-2:#38bdf8;
+    --good:#34d399; --warn:#fbbf24; --bad:#f87171; --purple:#a78bfa;
+    --radius:12px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 20px 64px}
+  a{color:var(--accent-2);text-decoration:none}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:800;color:#04201d;font-size:18px}
+  h1{font-size:1.25rem;margin:0}.sub{color:var(--muted);font-size:.85rem}.back{font-size:.85rem;color:var(--muted)}
+  .banner{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px 14px;font-size:.85rem;color:var(--muted);margin:16px 0 22px}
+  .banner b{color:var(--text)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+  button.btn{border:none;border-radius:9px;padding:10px 18px;font-weight:700;cursor:pointer;font-size:.88rem}
+  button.primary{background:var(--accent);color:#04201d}button.primary:hover{filter:brightness(1.08)}
+  button.warn{background:var(--warn);color:#3a2a00}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  select{background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 11px;font-size:.85rem}
+  .speed{margin-left:auto;color:var(--muted);font-size:.8rem;display:flex;align-items:center;gap:8px}
+  .grid{display:grid;grid-template-columns:1fr 360px;gap:20px}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+  .panel h2{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0;padding:14px 16px;border-bottom:1px solid var(--line)}
+  /* pipeline */
+  .flow{padding:18px}
+  .node{display:flex;gap:13px;padding:14px;border:1px solid var(--line);border-radius:11px;margin-bottom:0;background:var(--panel-2);opacity:.35;transition:.4s}
+  .node.on{opacity:1;border-color:var(--accent)}
+  .node.alert{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad) inset}
+  .node.ok{border-color:var(--good)}
+  .node .ico{width:34px;height:34px;border-radius:9px;background:var(--bg);display:grid;place-items:center;font-size:16px;flex:none}
+  .node .t{font-size:.9rem;font-weight:600}.node .d{font-size:.78rem;color:var(--muted);margin-top:2px}
+  .conn{height:16px;width:2px;background:var(--line);margin:0 0 0 32px}
+  .conn.on{background:var(--accent)}
+  /* timer */
+  .timerbox{text-align:center;padding:18px}
+  .clock{font-family:var(--mono);font-size:2.4rem;font-weight:700;letter-spacing:.04em}
+  .clock.run{color:var(--warn)}.clock.ack{color:var(--good)}.clock.esc{color:var(--bad)}
+  .ring{height:8px;background:var(--bg);border-radius:99px;overflow:hidden;margin:12px 0 4px}
+  .ring>i{display:block;height:100%;width:100%;background:var(--good);transition:width 1s linear}
+  .statepill{display:inline-block;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:4px 11px;border-radius:999px;margin-top:6px}
+  .sp-idle{background:#26303d;color:var(--muted)}.sp-armed{background:#3a3000;color:var(--warn)}
+  .sp-ack{background:#063a2a;color:var(--good)}.sp-esc{background:#3a0d0d;color:var(--bad)}
+  .roster{padding:0 16px 16px;font-size:.82rem}
+  .roster .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+  .roster .row:last-child{border-bottom:none}
+  .badge{font-size:.68rem;border-radius:999px;padding:2px 8px}
+  .b-primary{background:#063a2a;color:var(--good)}.b-secondary{background:#1c2430;color:var(--muted)}
+  /* log */
+  .log{padding:14px 16px;font-family:var(--mono);font-size:.78rem;max-height:240px;overflow-y:auto}
+  .log .l{padding:3px 0;color:var(--muted);border-bottom:1px solid #1b2129}
+  .log .l b{color:var(--text)}
+  .log .l.sms{color:var(--accent)}.log .l.esc{color:var(--bad)}.log .l.ack{color:var(--good)}
+  .ts{color:#5b6673}
+  .sms-preview{margin:0 16px 16px;background:#04201d;border:1px solid #0c4a40;border-radius:12px;padding:12px 14px;font-size:.82rem;display:none}
+  .sms-preview.show{display:block;animation:pop .3s ease}
+  @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .sms-preview .hdr{font-size:.7rem;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+  .foot{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;border-top:1px solid var(--line);padding-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">M</div>
+      <div>
+        <h1>Meridian Fleet — On-Call Paging Service</h1>
+        <div class="sub">Webhook → SMS · ack timer · automatic escalation · interactive simulator</div>
+      </div>
+    </div>
+    <a class="back" href="index.html">← Portfolio</a>
+  </div>
+
+  <div class="banner">
+    <b>What's real vs. simulated:</b> Sanitized rebuild of a production on-call paging service (live version: serverless functions,
+    a queue, a scheduler, and an SMS provider). This simulator runs the real <b>state machine</b> in your browser — trigger an
+    alert, watch the page fire, then acknowledge it or let the 15-minute timer lapse to see escalation. <b>Meridian Fleet</b> is fictional; no SMS is sent.
+  </div>
+
+  <div class="controls">
+    <select id="sev">
+      <option value="P1">P1 — Critical (data pipeline down)</option>
+      <option value="P2">P2 — High (elevated error rate)</option>
+      <option value="P3">P3 — Elevated (degraded ingestion)</option>
+    </select>
+    <button class="btn primary" id="trigger">⚡ Trigger alert</button>
+    <button class="btn warn" id="ack" disabled>✓ Acknowledge page</button>
+    <button class="btn ghost" id="reset">Reset</button>
+    <span class="speed">Sim speed
+      <select id="speed">
+        <option value="60">60× (15 min → 15 s)</option>
+        <option value="180">180× (fast)</option>
+        <option value="1">1× (real time)</option>
+      </select>
+    </span>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Event Flow</h2>
+      <div class="flow">
+        <div class="node" id="n1"><div class="ico">🪝</div><div><div class="t">Webhook received</div><div class="d" id="n1d">Waiting for an alert…</div></div></div>
+        <div class="conn" id="c1"></div>
+        <div class="node" id="n2"><div class="ico">🗓️</div><div><div class="t">On-call lookup</div><div class="d" id="n2d">—</div></div></div>
+        <div class="conn" id="c2"></div>
+        <div class="node" id="n3"><div class="ico">📲</div><div><div class="t">SMS page sent</div><div class="d" id="n3d">—</div></div></div>
+        <div class="conn" id="c3"></div>
+        <div class="node" id="n4"><div class="ico">⏱️</div><div><div class="t">Ack timer armed (15 min)</div><div class="d" id="n4d">—</div></div></div>
+        <div class="conn" id="c4"></div>
+        <div class="node" id="n5"><div class="ico">⚠️</div><div><div class="t">Escalation</div><div class="d" id="n5d">—</div></div></div>
+      </div>
+      <div class="sms-preview" id="smsPrev">
+        <div class="hdr">📲 SMS to on-call</div>
+        <div id="smsBody"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel" style="margin-bottom:20px">
+        <h2>Ack Timer</h2>
+        <div class="timerbox">
+          <div class="clock" id="clock">15:00</div>
+          <div class="ring"><i id="ring"></i></div>
+          <div class="statepill sp-idle" id="statepill">Idle</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>On-Call Roster</h2>
+        <div class="roster" id="roster"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:20px">
+    <h2>Event Log</h2>
+    <div class="log" id="log"><div class="l">System ready. Trigger an alert to begin.</div></div>
+  </div>
+
+  <div class="foot">Sanitized portfolio demo · built by James L. Madison · no production data or credentials</div>
+</div>
+
+<script>
+const ROSTER=[
+  {name:"A. Rivera",role:"Primary on-call",badge:"primary"},
+  {name:"K. Osei",role:"Secondary",badge:"secondary"},
+  {name:"On-call Manager",role:"Escalation tier",badge:"secondary"},
+];
+const rosterEl=document.getElementById('roster');
+ROSTER.forEach(r=>{const d=document.createElement('div');d.className='row';d.innerHTML=`<span><b>${r.name}</b><br><span class="sub">${r.role}</span></span><span class="badge ${r.badge==='primary'?'b-primary':'b-secondary'}">${r.badge==='primary'?'PRIMARY':'backup'}</span>`;rosterEl.appendChild(d);});
+
+const TOTAL=15*60; // seconds
+let remaining=TOTAL, tickInt=null, state='idle';
+const $=id=>document.getElementById(id);
+function now(){return new Date().toLocaleTimeString('en-US',{hour12:false});}
+function log(msg,cls=''){const d=document.createElement('div');d.className='l '+cls;d.innerHTML=`<span class="ts">${now()}</span> ${msg}`;const L=$('log');L.appendChild(d);L.scrollTop=L.scrollHeight;}
+function setNode(n,cls){const el=$('n'+n);el.classList.add('on');if(cls)el.classList.add(cls);}
+function setConn(n){$('c'+n).classList.add('on');}
+function setState(s){
+  state=s;const p=$('statepill');p.className='statepill '+({idle:'sp-idle',armed:'sp-armed',ack:'sp-ack',esc:'sp-esc'}[s]);
+  p.textContent={idle:'Idle',armed:'Awaiting ack',ack:'Acknowledged',esc:'Escalated'}[s];
+  const c=$('clock');c.className='clock '+({armed:'run',ack:'ack',esc:'esc'}[s]||'');
+}
+function fmt(s){const m=Math.floor(s/60),ss=s%60;return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;}
+
+async function trigger(){
+  reset(true);
+  const sev=$('sev').value;
+  const ids={P1:"INC-"+rand(),P2:"INC-"+rand(),P3:"INC-"+rand()}[sev];
+  $('trigger').disabled=true;$('ack').disabled=false;
+  log(`<b>${sev}</b> alert received via webhook · ${ids}`,'');
+  setNode(1);$('n1d').textContent=`${sev} · ${ids} · HMAC signature verified ✓`;
+  await wait(700);setConn(1);setNode(2);
+  $('n2d').textContent='Primary on-call: A. Rivera';
+  log('Resolved on-call schedule → <b>A. Rivera</b> (primary)');
+  await wait(700);setConn(2);setNode(3);
+  $('n3d').textContent='Delivered to A. Rivera';
+  $('smsBody').innerHTML=`<b>[Meridian Paging]</b> ${sev} ${ids}<br>${sevText(sev)}<br>Reply ACK within 15m or this escalates.`;
+  $('smsPrev').classList.add('show');
+  log('📲 SMS page sent to primary on-call','sms');
+  await wait(700);setConn(3);setNode(4);
+  $('n4d').textContent='Counting down — acknowledge to stop';
+  log('⏱️ Ack timer armed: 15:00');
+  startTimer();
+}
+function sevText(s){return {P1:"Data pipeline down — customer-facing.",P2:"Elevated error rate on ingestion.",P3:"Degraded ingestion latency."}[s];}
+function startTimer(){
+  setState('armed');remaining=TOTAL;updateClock();
+  const speed=+$('speed').value;
+  tickInt=setInterval(()=>{
+    remaining-=1;
+    if(remaining<=0){remaining=0;updateClock();clearInterval(tickInt);escalate();return;}
+    updateClock();
+  },1000/speed);
+}
+function updateClock(){$('clock').textContent=fmt(remaining);$('ring').style.width=(remaining/TOTAL*100)+'%';
+  $('ring').style.background=remaining/TOTAL>0.5?'var(--good)':remaining/TOTAL>0.25?'var(--warn)':'var(--bad)';}
+function ack(){
+  if(state!=='armed')return;
+  clearInterval(tickInt);setState('ack');
+  $('ack').disabled=true;$('trigger').disabled=false;
+  $('n4').classList.add('ok');$('n4d').textContent=`Acknowledged at ${fmt(TOTAL-remaining)} elapsed`;
+  log('✓ Page <b>acknowledged</b> by A. Rivera — timer stopped','ack');
+}
+function escalate(){
+  setState('esc');setConn(4);setNode(5,'alert');
+  $('n5d').textContent='Unacknowledged → paged Secondary + Manager';
+  $('ack').disabled=true;$('trigger').disabled=false;
+  log('⚠️ <b>No ack in 15:00</b> — escalating','esc');
+  log('📲 SMS page sent to <b>K. Osei</b> (secondary) + On-call Manager','esc');
+}
+function reset(soft){
+  clearInterval(tickInt);remaining=TOTAL;setState('idle');updateClock();$('clock').textContent='15:00';
+  for(let i=1;i<=5;i++){$('n'+i).classList.remove('on','alert','ok');if(i<5)$('c'+i).classList.remove('on');}
+  ['n2d','n3d','n4d','n5d'].forEach(id=>$(id).textContent='—');$('n1d').textContent='Waiting for an alert…';
+  $('smsPrev').classList.remove('show');$('trigger').disabled=false;$('ack').disabled=true;
+  if(!soft){$('log').innerHTML='<div class="l">System reset. Trigger an alert to begin.</div>';}
+}
+function rand(){return Math.floor(1000+Math.random()*9000);}
+function wait(ms){return new Promise(r=>setTimeout(r,ms/Math.max(1,+$('speed').value/60)));}
+$('trigger').onclick=trigger;$('ack').onclick=ack;$('reset').onclick=()=>reset(false);
+</script>
+</body>
+</html>

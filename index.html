@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>James L. Madison — Support Systems Portfolio</title>
+<meta name="description" content="Production support systems, AI-assisted operations tooling, and honest clean-room demos. Everything here is running live or is a faithful rebuild of something that is.">
+<meta property="og:title" content="James L. Madison — Support Systems Portfolio">
+<meta property="og:description" content="Real systems running in production, interactive clean-room demos, and field notes from support engineering.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0e13'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%233ddc84'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0a0e13;
+    --bg-raised: #10161d;
+    --bg-inset: #0d1219;
+    --line: #1d2733;
+    --line-bright: #2b3a4a;
+    --text: #c6d0da;
+    --text-dim: #7e8c9a;
+    --head: #eef3f8;
+    --live: #3ddc84;
+    --live-dim: rgba(61, 220, 132, 0.13);
+    --sim: #f0b23e;
+    --sim-dim: rgba(240, 178, 62, 0.12);
+    --note: #6fb3ff;
+    --note-dim: rgba(111, 179, 255, 0.12);
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* faint scanline texture + vignette */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 3px),
+      radial-gradient(120% 90% at 50% 0%, rgba(61,220,132,0.05), transparent 55%);
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 28px 80px;
+  }
+
+  a { color: inherit; }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--live);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* ---------- header bar ---------- */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+  .crumb { color: var(--text-dim); }
+  .crumb b { color: var(--head); font-weight: 600; }
+  .header-links { display: flex; gap: 22px; }
+  .header-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .header-links a:hover { color: var(--live); }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 84px 0 56px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    color: var(--live);
+    text-transform: uppercase;
+    margin-bottom: 26px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--live);
+    box-shadow: 0 0 0 0 rgba(61,220,132,0.5);
+    animation: pulse 2.4s ease-out infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(61,220,132,0.45); }
+    70%  { box-shadow: 0 0 0 9px rgba(61,220,132,0); }
+    100% { box-shadow: 0 0 0 0 rgba(61,220,132,0); }
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(2.1rem, 5.2vw, 3.55rem);
+    line-height: 1.14;
+    color: var(--head);
+    max-width: 21ch;
+    text-wrap: balance;
+  }
+  h1 em { font-style: italic; color: var(--live); }
+  .hero p.lede {
+    margin-top: 26px;
+    max-width: 60ch;
+    font-size: 1.12rem;
+    color: var(--text);
+  }
+  .hero p.lede .dim { color: var(--text-dim); }
+
+  /* stat strip */
+  .stats {
+    margin-top: 52px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 1px solid var(--line);
+    background: var(--bg-inset);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .stat {
+    padding: 18px 20px 16px;
+    border-left: 1px solid var(--line);
+  }
+  .stat:first-child { border-left: none; }
+  .stat .n {
+    font-family: var(--mono);
+    font-size: 1.28rem;
+    color: var(--head);
+    letter-spacing: -0.01em;
+  }
+  .stat .n span { color: var(--live); }
+  .stat .l {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* ---------- tiers ---------- */
+  .tier {
+    margin-top: 92px;
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 28px;
+  }
+  .tier-num {
+    font-family: var(--mono);
+    font-size: 60px;
+    line-height: 0.9;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--line-bright);
+    user-select: none;
+    padding-top: 6px;
+  }
+  .tier-head { margin-bottom: 30px; }
+  .tier-head h2 {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--head);
+  }
+  .tier-head h2::after {
+    content: "";
+    display: block;
+    width: 44px;
+    height: 2px;
+    margin-top: 12px;
+    background: var(--tier-accent, var(--live));
+  }
+  .tier-head p {
+    margin-top: 14px;
+    color: var(--text-dim);
+    font-size: 1.02rem;
+    max-width: 58ch;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 18px;
+  }
+
+  /* ---------- cards ---------- */
+  .card {
+    grid-column: span 6;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 26px 26px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: var(--card-accent, var(--line-bright));
+    box-shadow: 0 14px 34px -18px rgba(0,0,0,0.7);
+  }
+  .card.span7 { grid-column: span 7; }
+  .card.span5 { grid-column: span 5; }
+  .card.span4 { grid-column: span 4; }
+
+  .badge-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .badge.live { color: var(--live); background: var(--live-dim); }
+  .badge.live::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--live);
+    animation: pulse 2.4s ease-out infinite;
+  }
+  .badge.sim  { color: var(--sim);  background: var(--sim-dim); }
+  .badge.note { color: var(--note); background: var(--note-dim); }
+  .badge-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+  }
+
+  .card h3 {
+    font-family: var(--mono);
+    font-size: 1.06rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--head);
+  }
+  .card p { font-size: 0.99rem; color: var(--text); }
+  .card p .hard { color: var(--head); }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: auto; }
+  .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    border: 1px solid var(--line);
+    padding: 3px 8px;
+    border-radius: 99px;
+    letter-spacing: 0.03em;
+  }
+
+  .card .go {
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-size: 13px;
+    text-decoration: none;
+    color: var(--card-accent, var(--live));
+    letter-spacing: 0.02em;
+  }
+  .card .go::after { content: " →"; transition: none; }
+  .card .go:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+  .t-live .card { --card-accent: var(--live); }
+  .t-sim  .card { --card-accent: var(--sim); }
+  .t-note .card { --card-accent: var(--note); }
+
+  /* ---------- process band ---------- */
+  .band {
+    margin-top: 92px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--live);
+    background: linear-gradient(90deg, rgba(61,220,132,0.05), transparent 45%);
+    border-radius: 10px;
+    padding: 30px 34px;
+  }
+  .band h2 {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--live);
+    margin-bottom: 14px;
+  }
+  .band p {
+    max-width: 74ch;
+    font-size: 1.05rem;
+  }
+  .band p b { color: var(--head); font-weight: 600; }
+
+  /* ---------- footer ---------- */
+  footer {
+    margin-top: 100px;
+    border-top: 1px solid var(--line);
+    padding-top: 36px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+    font-size: 0.92rem;
+    color: var(--text-dim);
+  }
+  footer h4 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  footer a { color: var(--text); text-decoration-color: var(--line-bright); text-underline-offset: 3px; }
+  footer a:hover { color: var(--live); }
+  .colophon-meta {
+    grid-column: 1 / -1;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    border-top: 1px dashed var(--line);
+    padding-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* ---------- load reveal ---------- */
+  .reveal { opacity: 0; transform: translateY(14px); animation: rise 0.7s ease forwards; }
+  .d1 { animation-delay: 0.05s; } .d2 { animation-delay: 0.15s; }
+  .d3 { animation-delay: 0.25s; } .d4 { animation-delay: 0.35s; }
+  .d5 { animation-delay: 0.45s; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { animation: none; opacity: 1; transform: none; }
+    .eyebrow::before, .badge.live::before { animation: none; }
+    html { scroll-behavior: auto; }
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 880px) {
+    .tier { grid-template-columns: 1fr; gap: 10px; }
+    .tier-num { font-size: 40px; padding: 0; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .stat:nth-child(3) { border-left: none; }
+    .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
+    .card, .card.span7, .card.span5, .card.span4 { grid-column: span 12; }
+    .hero { padding: 60px 0 40px; }
+    footer { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="crumb"><b>jmadison</b> / portfolio</span>
+    <nav class="header-links" aria-label="Profiles">
+      <a href="https://www.linkedin.com/in/jlm-madison" rel="noopener">LinkedIn ↗</a>
+      <a href="https://github.com/mrmadison14" rel="noopener">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <p class="eyebrow reveal d1">James L. Madison · Support Team Manager · Fleet-Telematics SaaS</p>
+    <h1 class="reveal d2">I run a support team, and I build the <em>systems</em> that make it fast.</h1>
+    <p class="lede reveal d3">
+      AI-assisted triage, on-call paging, ticket routing, order automation.
+      <span class="dim">Everything on this page is either running in production right now, or an honest clean-room rebuild of something that is.</span>
+    </p>
+
+    <div class="stats reveal d4" role="list" aria-label="Operating numbers">
+      <div class="stat" role="listitem">
+        <div class="n">120–250<span>/wk</span></div>
+        <div class="l">tickets auto-routed</div>
+      </div>
+      <div class="stat" role="listitem">
+        <div class="n">&lt;15<span> min</span></div>
+        <div class="l">paging ack, enforced by escalation</div>
+      </div>
+      <div class="stat" role="listitem">
+        <div class="n">5 <span>people</span> · 8 <span>brands</span></div>
+        <div class="l">support org scope</div>
+      </div>
+      <div class="stat" role="listitem">
+        <div class="n">4<span> services</span></div>
+        <div class="l">production tools shipped</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tier t-live reveal d5" style="--tier-accent: var(--live)" aria-labelledby="t1">
+    <div class="tier-num" aria-hidden="true">01</div>
+    <div>
+      <div class="tier-head">
+        <h2 id="t1">Running in production</h2>
+        <p>Real systems, live today, publicly verifiable. Click through and check.</p>
+      </div>
+      <div class="grid">
+        <article class="card span7">
+          <div class="badge-row">
+            <span class="badge live">Live · Prod</span>
+            <span class="badge-meta">every 5 min since Jun 2026</span>
+          </div>
+          <h3>TCG Restock Watcher</h3>
+          <p>An autonomous monitoring and deal-detection service. Polls 20 storefronts every five minutes from free CI infrastructure, diffs against committed state snapshots, classifies restocks, preorders and price drops against a ~3,400-product market-price index, and alerts Discord with rate-limit-aware delivery. <span class="hard">When parallel runs raced and 38% of state pushes failed, I rebuilt the commit step to reconcile and retry. Failures went to zero.</span></p>
+          <div class="tags">
+            <span class="tag">Python</span><span class="tag">GitHub Actions</span><span class="tag">CI/CD</span><span class="tag">alerting</span><span class="tag">reliability</span>
+          </div>
+          <a class="go" href="https://github.com/mrmadison14/tcg-restock-watcher" rel="noopener">View the code and its commit history</a>
+        </article>
+
+        <article class="card span5">
+          <div class="badge-row">
+            <span class="badge live">Live · Prod</span>
+            <span class="badge-meta">client work</span>
+          </div>
+          <h3>pybstrong.com</h3>
+          <p>A client's site, designed and shipped end to end: a motion-design layer, accessibility fixes against WCAG guidance, a strict Content-Security-Policy, and origin-verified Netlify deploys. Hand-built, no framework.</p>
+          <div class="tags">
+            <span class="tag">HTML/CSS/JS</span><span class="tag">motion</span><span class="tag">a11y</span><span class="tag">CSP</span><span class="tag">Netlify</span>
+          </div>
+          <a class="go" href="https://pybstrong.com" rel="noopener">Visit the live site</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="tier t-sim" style="--tier-accent: var(--sim)" aria-labelledby="t2">
+    <div class="tier-num" aria-hidden="true">02</div>
+    <div>
+      <div class="tier-head">
+        <h2 id="t2">Clean-room demos</h2>
+        <p>My production work is proprietary, so these are faithful rebuilds: real architecture, a fictional company (Meridian Fleet Systems), fake data. Each demo runs entirely in your browser and says plainly what the production version does that the simulation doesn't.</p>
+      </div>
+      <div class="grid">
+        <article class="card">
+          <div class="badge-row"><span class="badge sim">Simulation</span></div>
+          <h3>AI Support Assistant</h3>
+          <p>A multi-agent triage console. Type a support message; it classifies intent, shows confidence and reasoning, routes to a specialist agent, and answers from a small knowledge base. Production adds an LLM with retrieval over curated knowledge, gated by an eval suite.</p>
+          <div class="tags"><span class="tag">multi-agent</span><span class="tag">intent routing</span><span class="tag">retrieval</span></div>
+          <a class="go" href="demo-ai-support-bot.html">Launch demo</a>
+        </article>
+
+        <article class="card">
+          <div class="badge-row"><span class="badge sim">Simulation</span></div>
+          <h3>Hardware Order Portal</h3>
+          <p>A five-screen ordering flow: catalog, cart, address entry with live validation, review, confirmation. Keyboard-navigable and screen-reader friendly. Production adds auth, server-side validation, security hardening and roughly 18,000 more lines.</p>
+          <div class="tags"><span class="tag">UX engineering</span><span class="tag">forms</span><span class="tag">WCAG 2.2</span></div>
+          <a class="go" href="demo-order-portal.html">Launch demo</a>
+        </article>
+
+        <article class="card">
+          <div class="badge-row"><span class="badge sim">Simulation</span></div>
+          <h3>On-Call Paging Service</h3>
+          <p>An event-driven paging simulator: webhook in, on-call lookup, SMS page out, a 15-minute acknowledgment timer, automatic escalation if it lapses. It runs the real state machine, sped up so you can watch it. Production runs serverless with a queue, a scheduler and an SMS provider.</p>
+          <div class="tags"><span class="tag">event-driven</span><span class="tag">serverless</span><span class="tag">SRE</span></div>
+          <a class="go" href="demo-paging-service.html">Launch demo</a>
+        </article>
+
+        <article class="card">
+          <div class="badge-row"><span class="badge sim">Simulation</span></div>
+          <h3>Ticket Routing Service</h3>
+          <p>A live rules console: a stream of inbound tickets is routed by priority, product line and keyword while you edit the rules and watch decisions change. Production is a tested, Dockerized FastAPI service with HMAC-verified webhooks that replaced a no-code workflow.</p>
+          <div class="tags"><span class="tag">FastAPI</span><span class="tag">rules engine</span><span class="tag">HMAC</span><span class="tag">Docker</span></div>
+          <a class="go" href="demo-routing-service.html">Launch demo</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="how">
+    <h2 id="how">How this gets built</h2>
+    <p>I engineer AI-agent workflows with the same discipline as any production system: <b>eval suites gate every change, pre-flight verification rules guard every write,</b> and automation earns trust incrementally. That process — Claude-based agent tooling with hard guardrails — is how one support team ships like a platform team.</p>
+  </section>
+
+  <section class="tier t-note" style="--tier-accent: var(--note)" aria-labelledby="t3">
+    <div class="tier-num" aria-hidden="true">03</div>
+    <div>
+      <div class="tier-head">
+        <h2 id="t3">Field notes</h2>
+        <p>True stories from production, identifying details removed. Full write-ups are on the way; the shape of each story is below.</p>
+      </div>
+      <div class="grid">
+        <article class="card span4">
+          <div class="badge-row"><span class="badge note">Case study</span></div>
+          <h3>Platform migration under load</h3>
+          <p>Consolidating helpdesks across acquired brands without customers noticing: shadow-mode gating keyed to brand rather than trigger order, a leak monitor that caught the one that slipped, a staged 160-article knowledge-base migration, and a cutover runbook with a rollback at every step.</p>
+          <div class="tags"><span class="tag">migration</span><span class="tag">monitoring</span><span class="tag">runbooks</span></div>
+        </article>
+
+        <article class="card span4">
+          <div class="badge-row"><span class="badge note">Case study</span></div>
+          <h3>Evaluating an LLM you actually ship</h3>
+          <p>A production support bot only merges through its eval harness: smoke and full suites, scoring rubrics, and a triage discipline that separates real regressions from judge variance. Red before green, every time.</p>
+          <div class="tags"><span class="tag">LLM evals</span><span class="tag">CI gating</span><span class="tag">test discipline</span></div>
+        </article>
+
+        <article class="card span4">
+          <div class="badge-row"><span class="badge note">Case study</span></div>
+          <h3>Order ops, automated with guardrails</h3>
+          <p>PDF order intake to validated vendor orders through agent workflows: exact-match contact rules, live SKU verification, bundle decomposition, and a pre-flight check that stops any write that fails. Batches of 20-plus orders, zero wrong-place shipments.</p>
+          <div class="tags"><span class="tag">agent workflows</span><span class="tag">document parsing</span><span class="tag">verification</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>
+      <h4>Provenance</h4>
+      <p>Tier 01 links to real systems running today. Tier 02 demos are clean-room rebuilds of proprietary production work, using a fictional company and fake data. Tier 03 stories are true, with identifying details removed. Nothing proprietary appears on this site.</p>
+    </div>
+    <div>
+      <h4>Colophon</h4>
+      <p>This page is one hand-written HTML file. No framework, no build step, no JavaScript on this page, no trackers, no external requests. <a href="https://github.com/mrmadison14/portfolio" rel="noopener">View the source</a>, or just hit View Source.</p>
+    </div>
+    <div class="colophon-meta">
+      <span>© 2026 James L. Madison</span>
+      <span><a href="https://www.linkedin.com/in/jlm-madison" rel="noopener">linkedin.com/in/jlm-madison</a></span>
+      <span>updated 2026-07-01 · v1.0</span>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

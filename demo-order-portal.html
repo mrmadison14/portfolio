@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Fleet — Hardware Order Portal (Demo)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel-2:#1c2430; --line:#2a3340;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#2dd4bf; --accent-2:#38bdf8;
+    --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --radius:12px; --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5}
+  .wrap{max-width:1000px;margin:0 auto;padding:24px 20px 64px}
+  a{color:var(--accent-2);text-decoration:none}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:800;color:#04201d;font-size:18px}
+  h1{font-size:1.25rem;margin:0}
+  .sub{color:var(--muted);font-size:.85rem}
+  .back{font-size:.85rem;color:var(--muted)}
+  .banner{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px 14px;font-size:.85rem;color:var(--muted);margin:16px 0 22px}
+  .banner b{color:var(--text)}
+  /* stepper */
+  .steps{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+  .step{flex:1;min-width:120px;display:flex;align-items:center;gap:9px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:.82rem;color:var(--muted)}
+  .step .n{width:22px;height:22px;border-radius:50%;background:var(--panel-2);display:grid;place-items:center;font-size:.75rem;font-weight:700;flex:none;border:1px solid var(--line)}
+  .step.active{border-color:var(--accent);color:var(--text)}
+  .step.active .n{background:var(--accent);color:#04201d;border-color:var(--accent)}
+  .step.done .n{background:var(--good);color:#04201d;border-color:var(--good)}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  h2{font-size:1.05rem;margin:0 0 4px}
+  .screen{display:none}.screen.show{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  /* catalog */
+  .cat{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:18px}
+  .card{border:1px solid var(--line);border-radius:11px;padding:16px;background:var(--panel-2);display:flex;flex-direction:column}
+  .card .img{height:90px;border-radius:8px;background:linear-gradient(135deg,#0f2a33,#11202e);display:grid;place-items:center;font-size:34px;margin-bottom:12px}
+  .card h3{margin:0 0 3px;font-size:.95rem}
+  .card .desc{font-size:.8rem;color:var(--muted);flex:1;margin-bottom:10px}
+  .card .price{font-weight:700;color:var(--accent);margin-bottom:10px}
+  .qtyrow{display:flex;align-items:center;gap:8px}
+  .qtyrow button{width:30px;height:30px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:1.1rem;cursor:pointer}
+  .qtyrow input{width:48px;text-align:center;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:7px;height:30px}
+  /* cart / review tables */
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);font-size:.88rem}
+  th{color:var(--muted);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em}
+  td.r,th.r{text-align:right}
+  .totrow td{font-weight:700;border-bottom:none}
+  /* form */
+  .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+  .formgrid .full{grid-column:1/-1}
+  @media(max-width:620px){.formgrid{grid-template-columns:1fr}}
+  label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:5px}
+  input[type=text],select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px 11px;font-size:.9rem;font-family:var(--sans)}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  input.invalid{border-color:var(--bad)}
+  input.valid{border-color:var(--good)}
+  .err{color:var(--bad);font-size:.74rem;margin-top:4px;min-height:14px}
+  .hint{color:var(--muted);font-size:.74rem;margin-top:4px}
+  .saved{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .savedaddr{border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:.82rem;cursor:pointer;background:var(--panel-2)}
+  .savedaddr:hover{border-color:var(--accent)}
+  /* nav buttons */
+  .nav{display:flex;justify-content:space-between;margin-top:24px;gap:12px}
+  button.btn{border:none;border-radius:9px;padding:11px 22px;font-weight:700;cursor:pointer;font-size:.9rem}
+  button.primary{background:var(--accent);color:#04201d}
+  button.primary:hover{filter:brightness(1.08)}
+  button.primary:disabled{opacity:.4;cursor:not-allowed}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .cartbadge{font-size:.78rem;color:var(--muted)}
+  .confirm{text-align:center;padding:24px 10px}
+  .confirm .big{width:64px;height:64px;border-radius:50%;background:var(--good);color:#04201d;display:grid;place-items:center;font-size:32px;margin:0 auto 16px}
+  .ordernum{font-family:ui-monospace,Menlo,monospace;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 12px;display:inline-block;margin-top:6px}
+  .a11y{font-size:.78rem;color:var(--muted);margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  .foot{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">M</div>
+      <div>
+        <h1>Meridian Fleet — Hardware Order Portal</h1>
+        <div class="sub">Multi-step ordering flow · validation · accessibility · interactive demo</div>
+      </div>
+    </div>
+    <a class="back" href="index.html">← Portfolio</a>
+  </div>
+
+  <div class="banner">
+    <b>What's real vs. simulated:</b> Sanitized front-end of a client-facing ordering portal I built (production version: ~18k LOC,
+    auth, server-side validation, security hardening, WCAG 2.2 AA). This demo runs the full multi-step flow and real-time
+    validation <b>in your browser</b> — fake catalog, fake order numbers, no backend. <b>Meridian Fleet</b> is fictional.
+  </div>
+
+  <div class="steps" role="list" aria-label="Checkout progress">
+    <div class="step active" id="st1" role="listitem"><span class="n">1</span> Catalog</div>
+    <div class="step" id="st2" role="listitem"><span class="n">2</span> Cart</div>
+    <div class="step" id="st3" role="listitem"><span class="n">3</span> Shipping</div>
+    <div class="step" id="st4" role="listitem"><span class="n">4</span> Review</div>
+    <div class="step" id="st5" role="listitem"><span class="n">5</span> Confirm</div>
+  </div>
+
+  <div class="panel">
+    <!-- 1. Catalog -->
+    <section class="screen show" id="screen1" aria-labelledby="h1c">
+      <h2 id="h1c">Order hardware</h2>
+      <div class="sub">Select devices and harnesses for your fleet.</div>
+      <div class="cat" id="catalog"></div>
+      <div class="nav">
+        <span></span>
+        <button class="btn primary" id="toCart">Review cart <span class="cartbadge" id="cartCount">(0)</span></button>
+      </div>
+    </section>
+
+    <!-- 2. Cart -->
+    <section class="screen" id="screen2" aria-labelledby="h2c">
+      <h2 id="h2c">Your cart</h2>
+      <table>
+        <thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Unit</th><th class="r">Subtotal</th></tr></thead>
+        <tbody id="cartBody"></tbody>
+        <tfoot id="cartFoot"></tfoot>
+      </table>
+      <div class="nav">
+        <button class="btn ghost" data-goto="1">← Back to catalog</button>
+        <button class="btn primary" id="toShip">Continue to shipping →</button>
+      </div>
+    </section>
+
+    <!-- 3. Shipping -->
+    <section class="screen" id="screen3" aria-labelledby="h3c">
+      <h2 id="h3c">Shipping address</h2>
+      <div class="sub">Saved addresses (click to autofill):</div>
+      <div class="saved" id="savedAddrs"></div>
+      <form id="shipForm" novalidate>
+        <div class="formgrid">
+          <div class="full">
+            <label for="f_name">Recipient / Fleet contact *</label>
+            <input type="text" id="f_name" autocomplete="name" aria-required="true">
+            <div class="err" id="e_name"></div>
+          </div>
+          <div class="full">
+            <label for="f_street">Street address *</label>
+            <input type="text" id="f_street" autocomplete="address-line1" aria-required="true">
+            <div class="err" id="e_street"></div>
+          </div>
+          <div>
+            <label for="f_city">City *</label>
+            <input type="text" id="f_city" autocomplete="address-level2" aria-required="true">
+            <div class="err" id="e_city"></div>
+          </div>
+          <div>
+            <label for="f_state">State *</label>
+            <select id="f_state" aria-required="true"><option value="">Select…</option></select>
+            <div class="err" id="e_state"></div>
+          </div>
+          <div>
+            <label for="f_zip">ZIP code *</label>
+            <input type="text" id="f_zip" inputmode="numeric" autocomplete="postal-code" aria-required="true" maxlength="10">
+            <div class="err" id="e_zip"></div>
+            <div class="hint">Simulated USPS-style validation (5 or 5+4 digits)</div>
+          </div>
+          <div>
+            <label for="f_phone">Phone *</label>
+            <input type="text" id="f_phone" inputmode="tel" autocomplete="tel" aria-required="true">
+            <div class="err" id="e_phone"></div>
+          </div>
+        </div>
+      </form>
+      <div class="nav">
+        <button class="btn ghost" data-goto="2">← Back to cart</button>
+        <button class="btn primary" id="toReview">Review order →</button>
+      </div>
+    </section>
+
+    <!-- 4. Review -->
+    <section class="screen" id="screen4" aria-labelledby="h4c">
+      <h2 id="h4c">Review &amp; place order</h2>
+      <table>
+        <thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Subtotal</th></tr></thead>
+        <tbody id="reviewBody"></tbody>
+        <tfoot id="reviewFoot"></tfoot>
+      </table>
+      <h2 style="margin-top:22px;font-size:.95rem">Ship to</h2>
+      <div id="reviewAddr" class="sub"></div>
+      <div class="nav">
+        <button class="btn ghost" data-goto="3">← Edit shipping</button>
+        <button class="btn primary" id="placeOrder">Place order</button>
+      </div>
+    </section>
+
+    <!-- 5. Confirm -->
+    <section class="screen" id="screen5" aria-labelledby="h5c">
+      <div class="confirm">
+        <div class="big" aria-hidden="true">✓</div>
+        <h2 id="h5c">Order placed</h2>
+        <div class="sub">A confirmation would be emailed to your fleet contact.</div>
+        <div class="ordernum" id="orderNum"></div>
+        <div style="margin-top:20px"><button class="btn primary" id="startOver">Start a new order</button></div>
+      </div>
+    </section>
+
+    <div class="a11y">
+      <b>Accessibility built in:</b> semantic landmarks, labelled inputs, <code>aria-required</code>, visible focus states,
+      keyboard-operable throughout, inline error messaging announced near each field, and an SR-only live region for step changes.
+    </div>
+    <div aria-live="polite" class="sr-only" id="live"></div>
+  </div>
+
+  <div class="foot">Sanitized portfolio demo · built by James L. Madison · no production data or credentials</div>
+</div>
+
+<script>
+const PRODUCTS=[
+  {id:"m5",name:"M5 Telematics Unit",icon:"📟",desc:"Entry plug-and-play OBD-II tracker. Best for light vehicles.",price:89},
+  {id:"m7",name:"M7 Telematics Unit",icon:"📡",desc:"Mid-tier unit with extended GPS + driver-ID support.",price:139},
+  {id:"m9",name:"M9 Heavy-Duty Unit",icon:"🛰️",desc:"J1939 engine-bus telemetry for heavy fleets.",price:219},
+  {id:"h1",name:"H1 Harness (OBD-II)",icon:"🔌",desc:"Standard plug-and-play harness. No splicing.",price:24},
+  {id:"h2",name:"H2 Harness (Ignition)",icon:"🔧",desc:"2-wire ignition-sense harness for hardwire installs.",price:29},
+  {id:"h3",name:"H3 Harness (J1939)",icon:"⚡",desc:"Heavy-duty 9-pin deutsch harness.",price:39},
+];
+const STATES=["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
+const SAVED=[
+  {name:"North Depot — Receiving",street:"1420 Industrial Pkwy",city:"Marietta",state:"GA",zip:"30060",phone:"(770) 555-0142"},
+  {name:"West Yard — Ops",street:"88 Logistics Way",city:"Phoenix",state:"AZ",zip:"85034",phone:"(602) 555-0199"},
+];
+const cart={};
+let shipping=null;
+
+/* ---------- Catalog ---------- */
+const catalog=document.getElementById('catalog');
+PRODUCTS.forEach(p=>{
+  cart[p.id]=0;
+  const c=document.createElement('div');c.className='card';
+  c.innerHTML=`<div class="img" aria-hidden="true">${p.icon}</div>
+    <h3>${p.name}</h3><div class="desc">${p.desc}</div>
+    <div class="price">$${p.price.toFixed(2)}</div>
+    <div class="qtyrow">
+      <button aria-label="Decrease ${p.name}" data-m="${p.id}">−</button>
+      <input type="text" inputmode="numeric" value="0" id="q_${p.id}" aria-label="${p.name} quantity">
+      <button aria-label="Increase ${p.name}" data-p="${p.id}">+</button>
+    </div>`;
+  catalog.appendChild(c);
+});
+catalog.addEventListener('click',e=>{
+  const inc=e.target.dataset.p, dec=e.target.dataset.m;
+  if(inc){cart[inc]++;}
+  if(dec){cart[dec]=Math.max(0,cart[dec]-1);}
+  if(inc||dec){document.getElementById('q_'+(inc||dec)).value=cart[inc||dec];updateCount();}
+});
+catalog.addEventListener('input',e=>{
+  const id=e.target.id; if(id&&id.startsWith('q_')){const k=id.slice(2);let v=parseInt(e.target.value.replace(/\D/g,''))||0;cart[k]=v;e.target.value=v;updateCount();}
+});
+function updateCount(){const n=Object.values(cart).reduce((a,b)=>a+b,0);document.getElementById('cartCount').textContent='('+n+')';}
+
+/* ---------- Cart ---------- */
+function lineItems(){return PRODUCTS.filter(p=>cart[p.id]>0).map(p=>({...p,qty:cart[p.id],sub:cart[p.id]*p.price}));}
+function renderCart(){
+  const items=lineItems();const body=document.getElementById('cartBody');const foot=document.getElementById('cartFoot');
+  if(!items.length){body.innerHTML='<tr><td colspan="4" style="color:var(--muted)">Cart is empty — add items from the catalog.</td></tr>';foot.innerHTML='';return false;}
+  body.innerHTML=items.map(i=>`<tr><td>${i.name}</td><td class="r">${i.qty}</td><td class="r">$${i.price.toFixed(2)}</td><td class="r">$${i.sub.toFixed(2)}</td></tr>`).join('');
+  const total=items.reduce((a,b)=>a+b.sub,0);
+  foot.innerHTML=`<tr class="totrow"><td colspan="3" class="r">Order total</td><td class="r">$${total.toFixed(2)}</td></tr>`;
+  return true;
+}
+
+/* ---------- Shipping form + validation ---------- */
+const stateSel=document.getElementById('f_state');
+STATES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;stateSel.appendChild(o);});
+const savedWrap=document.getElementById('savedAddrs');
+SAVED.forEach((a,i)=>{
+  const d=document.createElement('div');d.className='savedaddr';d.tabIndex=0;d.setAttribute('role','button');
+  d.innerHTML=`<b>${a.name}</b><br>${a.street}, ${a.city} ${a.state} ${a.zip}`;
+  const fill=()=>{document.getElementById('f_name').value=a.name;document.getElementById('f_street').value=a.street;document.getElementById('f_city').value=a.city;stateSel.value=a.state;document.getElementById('f_zip').value=a.zip;document.getElementById('f_phone').value=a.phone;clearErrors();};
+  d.onclick=fill;d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fill();}};
+  savedWrap.appendChild(d);
+});
+const FIELDS={
+  f_name:{label:"Recipient",test:v=>v.trim().length>=2,msg:"Please enter a recipient name."},
+  f_street:{label:"Street",test:v=>v.trim().length>=4,msg:"Please enter a valid street address."},
+  f_city:{label:"City",test:v=>v.trim().length>=2,msg:"Please enter a city."},
+  f_state:{label:"State",test:v=>!!v,msg:"Please select a state."},
+  f_zip:{label:"ZIP",test:v=>/^\d{5}(-\d{4})?$/.test(v.trim()),msg:"ZIP must be 5 digits or 5+4 (e.g. 30060 or 30060-1234)."},
+  f_phone:{label:"Phone",test:v=>{const d=v.replace(/\D/g,'');return d.length===10||d.length===11;},msg:"Enter a 10-digit phone number."},
+};
+function validateField(id){
+  const el=document.getElementById(id),err=document.getElementById('e_'+id.slice(2)),f=FIELDS[id];
+  const ok=f.test(el.value);
+  el.classList.toggle('invalid',!ok);el.classList.toggle('valid',ok&&el.value!=='');
+  err.textContent=ok?'':f.msg;return ok;
+}
+Object.keys(FIELDS).forEach(id=>{document.getElementById(id).addEventListener('blur',()=>validateField(id));document.getElementById(id).addEventListener('input',()=>{const el=document.getElementById(id);if(el.classList.contains('invalid'))validateField(id);});});
+function clearErrors(){Object.keys(FIELDS).forEach(id=>{document.getElementById(id).classList.remove('invalid','valid');document.getElementById('e_'+id.slice(2)).textContent='';});}
+function validateAll(){let ok=true,first=null;Object.keys(FIELDS).forEach(id=>{if(!validateField(id)){ok=false;if(!first)first=id;}});if(first)document.getElementById(first).focus();return ok;}
+
+/* ---------- Review ---------- */
+function renderReview(){
+  const items=lineItems();
+  document.getElementById('reviewBody').innerHTML=items.map(i=>`<tr><td>${i.name}</td><td class="r">${i.qty}</td><td class="r">$${i.sub.toFixed(2)}</td></tr>`).join('');
+  const total=items.reduce((a,b)=>a+b.sub,0);
+  document.getElementById('reviewFoot').innerHTML=`<tr class="totrow"><td colspan="2" class="r">Order total</td><td class="r">$${total.toFixed(2)}</td></tr>`;
+  document.getElementById('reviewAddr').innerHTML=`${shipping.name}<br>${shipping.street}<br>${shipping.city}, ${shipping.state} ${shipping.zip}<br>${shipping.phone}`;
+}
+
+/* ---------- Navigation ---------- */
+function goto(n){
+  for(let i=1;i<=5;i++){
+    document.getElementById('screen'+i).classList.toggle('show',i===n);
+    const st=document.getElementById('st'+i);st.classList.toggle('active',i===n);st.classList.toggle('done',i<n);
+  }
+  document.getElementById('live').textContent='Step '+n+' of 5';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>goto(+b.dataset.goto));
+document.getElementById('toCart').onclick=()=>{renderCart();goto(2);};
+document.getElementById('toShip').onclick=()=>{if(!lineItems().length){document.getElementById('live').textContent='Cart is empty';alert('Add at least one item before continuing.');return;}goto(3);};
+document.getElementById('toReview').onclick=()=>{
+  if(!validateAll())return;
+  shipping={name:f_name.value,street:f_street.value,city:f_city.value,state:f_state.value,zip:f_zip.value,phone:f_phone.value};
+  renderReview();goto(4);
+};
+document.getElementById('placeOrder').onclick=()=>{
+  const num='MF-'+new Date().getFullYear()+'-'+Math.floor(100000+Math.random()*900000);
+  document.getElementById('orderNum').textContent='Order #'+num;
+  goto(5);
+};
+document.getElementById('startOver').onclick=()=>{
+  PRODUCTS.forEach(p=>{cart[p.id]=0;document.getElementById('q_'+p.id).value=0;});
+  updateCount();clearErrors();document.getElementById('shipForm').reset();shipping=null;goto(1);
+};
+</script>
+</body>
+</html>
