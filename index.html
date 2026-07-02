@@ -468,7 +468,7 @@
     <div>
       <div class="tier-head">
         <h2 id="t2">Clean-room demos</h2>
-        <p>My production work is proprietary, so these are faithful rebuilds: real architecture, a fictional company (Meridian Fleet Systems), fake data. Each demo runs entirely in your browser and says plainly what the production version does that the simulation doesn't.</p>
+        <p>My production work is proprietary, so these are faithful rebuilds: real architecture, a fictional company (Meridian Fleet Systems), fake data. Each demo runs entirely in your browser and says plainly what the production version does that the simulation doesn't. The two backend services are also published as runnable code with their test suites.</p>
       </div>
       <div class="grid">
         <article class="card">
@@ -492,7 +492,10 @@
           <h3>On-Call Paging Service</h3>
           <p>An event-driven paging simulator: webhook in, on-call lookup, SMS page out, a 15-minute acknowledgment timer, automatic escalation if it lapses. It runs the real state machine, sped up so you can watch it. Production runs serverless with a queue, a scheduler and an SMS provider.</p>
           <div class="tags"><span class="tag">event-driven</span><span class="tag">serverless</span><span class="tag">SRE</span></div>
-          <a class="go" href="demo-paging-service.html">Launch demo</a>
+          <div style="display:flex;gap:20px;flex-wrap:wrap">
+            <a class="go" href="demo-paging-service.html">Launch demo</a>
+            <a class="go" href="https://github.com/mrmadison14/meridian-paging-service" rel="noopener">View the code</a>
+          </div>
         </article>
 
         <article class="card">
@@ -500,7 +503,10 @@
           <h3>Ticket Routing Service</h3>
           <p>A live rules console: a stream of inbound tickets is routed by priority, product line and keyword while you edit the rules and watch decisions change. Production is a tested, Dockerized FastAPI service with HMAC-verified webhooks that replaced a no-code workflow.</p>
           <div class="tags"><span class="tag">FastAPI</span><span class="tag">rules engine</span><span class="tag">HMAC</span><span class="tag">Docker</span></div>
-          <a class="go" href="demo-routing-service.html">Launch demo</a>
+          <div style="display:flex;gap:20px;flex-wrap:wrap">
+            <a class="go" href="demo-routing-service.html">Launch demo</a>
+            <a class="go" href="https://github.com/mrmadison14/meridian-routing-service" rel="noopener">View the code</a>
+          </div>
         </article>
       </div>
     </div>
@@ -558,7 +564,7 @@
     <div class="colophon-meta">
       <span>© 2026 James L. Madison</span>
       <span><a href="https://www.linkedin.com/in/jlm-madison" rel="noopener">linkedin.com/in/jlm-madison</a></span>
-      <span>updated 2026-07-01 · v1.1</span>
+      <span>updated 2026-07-01 · v1.2</span>
     </div>
   </footer>
 
