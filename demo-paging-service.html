@@ -8,95 +8,124 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0e13'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23f0b23e'/%3E%3C/svg%3E">
 <style>
   :root{
-    --bg:#0d1117; --panel:#161b22; --panel-2:#1c2430; --line:#2a3340;
-    --text:#e6edf3; --muted:#9aa7b4; --accent:#2dd4bf; --accent-2:#38bdf8;
-    --good:#34d399; --warn:#fbbf24; --bad:#f87171; --purple:#a78bfa;
-    --radius:12px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --bg:#0a0e13; --bg-raised:#10161d; --bg-inset:#0d1219;
+    --line:#1d2733; --line-bright:#2b3a4a;
+    --text:#c6d0da; --text-dim:#7e8c9a; --head:#eef3f8;
+    --live:#3ddc84; --live-dim:rgba(61,220,132,0.13);
+    --sim:#f0b23e; --sim-dim:rgba(240,178,62,0.12);
+    --note:#6fb3ff; --note-dim:rgba(111,179,255,0.12);
+    --err:#e5695c; --err-dim:rgba(229,105,92,0.12);
+    --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5}
-  .wrap{max-width:1080px;margin:0 auto;padding:24px 20px 64px}
-  a{color:var(--accent-2);text-decoration:none}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--serif);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;
+    background:
+      repeating-linear-gradient(0deg,rgba(255,255,255,0.018) 0 1px,transparent 1px 3px),
+      radial-gradient(120% 90% at 50% 0%,rgba(240,178,62,0.04),transparent 55%);
+    z-index:0;
+  }
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:24px 20px 64px}
+  a{color:var(--sim);text-decoration:none}
+  a:hover{text-decoration:underline;text-underline-offset:3px}
+  a:focus-visible,button:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--sim);outline-offset:3px;border-radius:2px}
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
-  .brand{display:flex;align-items:center;gap:12px}
-  .logo{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:800;color:#04201d;font-size:18px}
-  h1{font-size:1.25rem;margin:0}.sub{color:var(--muted);font-size:.85rem}.back{font-size:.85rem;color:var(--muted)}
-  .banner{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:12px 14px;font-size:.85rem;color:var(--muted);margin:16px 0 22px}
-  .banner b{color:var(--text)}
-  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
-  button.btn{border:none;border-radius:9px;padding:10px 18px;font-weight:700;cursor:pointer;font-size:.88rem}
-  button.primary{background:var(--accent);color:#04201d}button.primary:hover{filter:brightness(1.08)}
-  button.warn{background:var(--warn);color:#3a2a00}
-  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
-  button:disabled{opacity:.4;cursor:not-allowed}
-  select{background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 11px;font-size:.85rem}
-  .speed{margin-left:auto;color:var(--muted);font-size:.8rem;display:flex;align-items:center;gap:8px}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .logo{width:38px;height:38px;flex:none;border-radius:6px;background:var(--bg);border:1px solid var(--line-bright);display:grid;place-items:center}
+  .logo::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--sim)}
+  h1{font-family:var(--serif);font-size:1.3rem;font-weight:600;margin:0;color:var(--head);overflow-wrap:break-word}
+  .sub{font-family:var(--mono);color:var(--text-dim);font-size:12.5px;letter-spacing:0.02em}
+  .back{font-family:var(--mono);font-size:13px;color:var(--text-dim)}
+  .noscript{font-family:var(--mono);font-size:13px;color:var(--note);background:var(--note-dim);border:1px solid var(--line-bright);border-radius:6px;padding:10px 14px;margin:16px 0 0}
+  .banner{background:rgba(240,178,62,0.06);border:1px solid var(--line-bright);border-radius:8px;padding:14px 16px;font-size:.9rem;color:var(--text-dim);margin:16px 0 22px;min-width:0;overflow-wrap:break-word}
+  .banner b{color:var(--head)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;min-width:0}
+  button.btn{font-family:var(--mono);border:1px solid transparent;border-radius:6px;padding:9px 16px;font-weight:600;cursor:pointer;font-size:13px;letter-spacing:0.02em}
+  button.primary{background:var(--sim);border-color:var(--sim);color:var(--bg)}
+  button.primary:hover:enabled{filter:brightness(1.08)}
+  button.warn{background:var(--sim);border-color:var(--sim);color:var(--bg)}
+  button.warn:hover:enabled{filter:brightness(1.08)}
+  button.ghost{background:transparent;color:var(--text-dim);border:1px solid var(--line-bright)}
+  button.ghost:hover:enabled{color:var(--text)}
+  button.btn:disabled{background:var(--bg-inset);color:var(--text-dim);border:1px solid var(--line);cursor:not-allowed}
+  select{background:var(--bg-inset);border:1px solid var(--line);color:var(--text);border-radius:4px;padding:8px 10px;font-size:12.5px;font-family:var(--mono)}
+  .speed{margin-left:auto;color:var(--text-dim);font-family:var(--mono);font-size:12.5px;display:flex;align-items:center;gap:8px}
   .grid{display:grid;grid-template-columns:1fr 360px;gap:20px}
-  @media(max-width:900px){.grid{grid-template-columns:1fr}}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
-  .panel h2{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0;padding:14px 16px;border-bottom:1px solid var(--line)}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}.speed{margin-left:0}}
+  .panel{background:var(--bg-raised);border:1px solid var(--line);border-radius:8px;min-width:0}
+  .panel h2{font-family:var(--serif);font-size:1.05rem;font-weight:600;color:var(--head);margin:0;padding:13px 16px;border-bottom:1px solid var(--line)}
   /* pipeline */
   .flow{padding:18px}
-  .node{display:flex;gap:13px;padding:14px;border:1px solid var(--line);border-radius:11px;margin-bottom:0;background:var(--panel-2);opacity:.35;transition:.4s}
-  .node.on{opacity:1;border-color:var(--accent)}
-  .node.alert{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad) inset}
-  .node.ok{border-color:var(--good)}
-  .node .ico{width:34px;height:34px;border-radius:9px;background:var(--bg);display:grid;place-items:center;font-size:16px;flex:none}
-  .node .t{font-size:.9rem;font-weight:600}.node .d{font-size:.78rem;color:var(--muted);margin-top:2px}
+  .node{display:flex;gap:13px;padding:14px;border:1px solid var(--line);border-radius:6px;margin-bottom:0;background:var(--bg-inset);opacity:.35;transition:opacity .4s ease,border-color .4s ease,box-shadow .4s ease}
+  .node.on{opacity:1;border-color:var(--sim)}
+  .node.alert{border-color:var(--err);box-shadow:0 0 0 1px var(--err) inset}
+  .node.ok{border-color:var(--live)}
+  .node .ico{width:34px;height:34px;border-radius:6px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;font-size:16px;flex:none}
+  .node .t{font-size:.95rem;font-weight:600;color:var(--head)}
+  .node .d{font-family:var(--mono);font-size:.75rem;color:var(--text-dim);margin-top:3px}
   .conn{height:16px;width:2px;background:var(--line);margin:0 0 0 32px}
-  .conn.on{background:var(--accent)}
+  .conn.on{background:var(--sim)}
   /* timer */
   .timerbox{text-align:center;padding:18px}
-  .clock{font-family:var(--mono);font-size:2.4rem;font-weight:700;letter-spacing:.04em}
-  .clock.run{color:var(--warn)}.clock.ack{color:var(--good)}.clock.esc{color:var(--bad)}
-  .ring{height:8px;background:var(--bg);border-radius:99px;overflow:hidden;margin:12px 0 4px}
-  .ring>i{display:block;height:100%;width:100%;background:var(--good);transition:width 1s linear}
-  .statepill{display:inline-block;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:4px 11px;border-radius:999px;margin-top:6px}
-  .sp-idle{background:#26303d;color:var(--muted)}.sp-armed{background:#3a3000;color:var(--warn)}
-  .sp-ack{background:#063a2a;color:var(--good)}.sp-esc{background:#3a0d0d;color:var(--bad)}
-  .roster{padding:0 16px 16px;font-size:.82rem}
-  .roster .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+  .clock{font-family:var(--mono);font-size:2.4rem;font-weight:700;letter-spacing:.04em;color:var(--head)}
+  .clock.run{color:var(--sim)}.clock.ack{color:var(--live)}.clock.esc{color:var(--err)}
+  .ring{height:8px;background:var(--bg-inset);border:1px solid var(--line);border-radius:4px;overflow:hidden;margin:12px 0 4px}
+  .ring>i{display:block;height:100%;width:100%;background:var(--live);transform-origin:left;transform:scaleX(1);transition:transform 1s linear,background-color 1s linear}
+  .statepill{display:inline-block;font-family:var(--mono);font-size:.74rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:4px 10px;border-radius:4px;margin-top:6px}
+  .sp-idle{background:var(--bg-inset);color:var(--text-dim)}.sp-armed{background:var(--sim-dim);color:var(--sim)}
+  .sp-ack{background:var(--live-dim);color:var(--live)}.sp-esc{background:var(--err-dim);color:var(--err)}
+  .roster{padding:0 16px 16px;font-size:.85rem}
+  .roster .row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
   .roster .row:last-child{border-bottom:none}
-  .badge{font-size:.68rem;border-radius:999px;padding:2px 8px}
-  .b-primary{background:#063a2a;color:var(--good)}.b-secondary{background:#1c2430;color:var(--muted)}
+  .roster b{color:var(--head);font-weight:600}
+  .badge{font-family:var(--mono);font-size:.72rem;border-radius:4px;padding:2px 8px;align-self:center;flex:none}
+  .b-primary{background:var(--live-dim);color:var(--live)}.b-secondary{background:var(--bg-inset);color:var(--text-dim);border:1px solid var(--line)}
   /* log */
   .log{padding:14px 16px;font-family:var(--mono);font-size:.78rem;max-height:240px;overflow-y:auto}
-  .log .l{padding:3px 0;color:var(--muted);border-bottom:1px solid #1b2129}
+  .log .l{padding:3px 0;color:var(--text-dim);border-bottom:1px solid var(--line)}
   .log .l b{color:var(--text)}
-  .log .l.sms{color:var(--accent)}.log .l.esc{color:var(--bad)}.log .l.ack{color:var(--good)}
-  .ts{color:#5b6673}
-  .sms-preview{margin:0 16px 16px;background:#04201d;border:1px solid #0c4a40;border-radius:12px;padding:12px 14px;font-size:.82rem;display:none}
+  .log .l.sms{color:var(--sim)}.log .l.esc{color:var(--err)}.log .l.ack{color:var(--live)}
+  .ts{color:var(--text-dim);opacity:.65}
+  .sms-preview{margin:0 16px 16px;background:rgba(240,178,62,0.06);border:1px solid var(--line-bright);border-radius:8px;padding:12px 14px;font-size:.85rem;display:none;overflow-wrap:break-word}
   .sms-preview.show{display:block;animation:pop .3s ease}
   @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
-  .sms-preview .hdr{font-size:.7rem;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
-  .foot{color:var(--muted);font-size:.78rem;margin-top:26px;text-align:center;border-top:1px solid var(--line);padding-top:18px}
+  .sms-preview .hdr{font-family:var(--mono);font-size:.72rem;color:var(--sim);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+  .foot{font-family:var(--mono);color:var(--text-dim);font-size:.78rem;margin-top:26px;text-align:center;border-top:1px solid var(--line);padding-top:18px}
   /* production architecture block */
-  details.arch{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:-6px 0 22px}
-  details.arch summary{cursor:pointer;padding:12px 14px;font-size:.85rem;color:var(--accent);font-weight:600;list-style:none}
+  details.arch{background:var(--bg-raised);border:1px solid var(--line);border-radius:8px;margin:-6px 0 22px;min-width:0}
+  details.arch summary{cursor:pointer;padding:12px 14px;font-family:var(--mono);font-size:13px;color:var(--sim);font-weight:600;list-style:none;min-width:0;overflow-wrap:break-word}
   details.arch summary::-webkit-details-marker{display:none}
   details.arch summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
   details.arch[open] summary::before{transform:rotate(90deg)}
-  .archbody{padding:2px 14px 16px;border-top:1px solid var(--line)}
-  .archbody svg{width:100%;height:auto;display:block;margin:12px 0 6px}
-  .archbody svg .nd{fill:var(--panel-2);stroke:var(--line)}
-  .archbody svg .nd.dash{fill:none;stroke:var(--muted);stroke-dasharray:4 3}
-  .archbody svg text{fill:var(--text);font-family:var(--mono);font-size:11px}
-  .archbody svg .sm{fill:var(--muted);font-size:9.5px}
-  .archbody svg .edge{stroke:#5b6673;stroke-width:1.2;fill:none;marker-end:url(#arr)}
+  .archbody{padding:2px 14px 16px;border-top:1px solid var(--line);min-width:0}
+  .archscroll{overflow-x:auto}
+  .archbody svg{width:100%;min-width:620px;height:auto;display:block;margin:12px 0 6px}
+  .archbody svg .nd{fill:var(--bg-inset);stroke:var(--line-bright)}
+  .archbody svg text{fill:var(--text);font-family:var(--mono);font-size:12px}
+  .archbody svg .sm{fill:var(--text-dim);font-size:11.5px}
+  .archbody svg .edge{stroke:var(--text-dim);stroke-width:1.2;fill:none;marker-end:url(#arr)}
   .archbody svg .edge.dash{stroke-dasharray:4 3}
   table.pvd{width:100%;border-collapse:collapse;margin-top:10px}
-  .pvd th,.pvd td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top;font-size:.78rem}
-  .pvd th{color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:.68rem}
-  .pvd td:first-child{color:var(--muted);white-space:nowrap;padding-right:14px}
+  .pvd th,.pvd td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top;font-size:.8rem}
+  .pvd th{font-family:var(--mono);color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-size:.72rem}
+  .pvd td:first-child{font-family:var(--mono);color:var(--text-dim);white-space:nowrap;padding-right:14px}
   .pvd tr:last-child td{border-bottom:none}
+  @media (prefers-reduced-motion: reduce){
+    .node{transition:none}
+    .conn{transition:none}
+    .ring>i{transition:none}
+    .sms-preview.show{animation:none}
+    details.arch summary::before{transition:none}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="topbar">
     <div class="brand">
-      <div class="logo">M</div>
+      <div class="logo" aria-hidden="true"></div>
       <div>
         <h1>Meridian Fleet — On-Call Paging Service</h1>
         <div class="sub">Webhook → SMS · ack timer · automatic escalation · interactive simulator</div>
@@ -105,43 +134,47 @@
     <a class="back" href="index.html">← Portfolio</a>
   </div>
 
+  <noscript><div class="noscript">This demo needs JavaScript to run; without it the page stays static.</div></noscript>
+
   <div class="banner">
     <b>What's real vs. simulated:</b> Sanitized rebuild of a production on-call paging service (live version: serverless functions,
-    a queue, a scheduler, and an SMS provider). This simulator runs the real <b>state machine</b> in your browser — trigger an
+    a queue, a scheduler, and an SMS provider). This simulator runs the real <b>state machine</b> in your browser: trigger an
     alert, watch the page fire, then acknowledge it or let the 15-minute timer lapse to see escalation. <b>Meridian Fleet</b> is fictional; no SMS is sent.
   </div>
 
   <details class="arch">
     <summary>Production architecture, and what this demo simulates</summary>
     <div class="archbody">
+      <div class="archscroll">
       <svg viewBox="0 0 740 185" role="img" aria-label="Production architecture: a helpdesk trigger hits an HMAC-verified webhook endpoint, a serverless function looks up the on-call schedule and pages via an SMS provider, a durable scheduler enforces the 15-minute acknowledgment deadline, and unacknowledged pages escalate to the secondary and manager.">
-        <defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#5b6673"/></marker></defs>
-        <rect class="nd" x="15" y="25" width="140" height="46" rx="8"/>
+        <defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" style="fill:var(--text-dim)"/></marker></defs>
+        <rect class="nd" x="15" y="25" width="140" height="46" rx="6"/>
         <text x="85" y="44" text-anchor="middle">Helpdesk trigger</text>
         <text class="sm" x="85" y="58" text-anchor="middle">high-priority ticket</text>
         <path class="edge" d="M155 48 H192"/>
-        <rect class="nd" x="195" y="25" width="140" height="46" rx="8"/>
+        <rect class="nd" x="195" y="25" width="140" height="46" rx="6"/>
         <text x="265" y="44" text-anchor="middle">Webhook endpoint</text>
         <text class="sm" x="265" y="58" text-anchor="middle">HMAC verified</text>
         <path class="edge" d="M335 48 H372"/>
-        <rect class="nd" x="375" y="25" width="140" height="46" rx="8"/>
+        <rect class="nd" x="375" y="25" width="140" height="46" rx="6"/>
         <text x="445" y="44" text-anchor="middle">On-call lookup</text>
         <text class="sm" x="445" y="58" text-anchor="middle">serverless fn · roster</text>
         <path class="edge" d="M515 48 H552"/>
-        <rect class="nd" x="555" y="25" width="140" height="46" rx="8"/>
+        <rect class="nd" x="555" y="25" width="140" height="46" rx="6"/>
         <text x="625" y="44" text-anchor="middle">SMS provider</text>
         <text class="sm" x="625" y="58" text-anchor="middle">page + receipts</text>
         <path class="edge" d="M445 71 V112"/>
-        <rect class="nd" x="375" y="115" width="140" height="46" rx="8"/>
+        <rect class="nd" x="375" y="115" width="140" height="46" rx="6"/>
         <text x="445" y="134" text-anchor="middle">Scheduler</text>
         <text class="sm" x="445" y="148" text-anchor="middle">15-min ack deadline</text>
         <path class="edge" d="M515 138 H552"/>
-        <rect class="nd" x="555" y="115" width="150" height="46" rx="8"/>
+        <rect class="nd" x="555" y="115" width="150" height="46" rx="6"/>
         <text x="630" y="134" text-anchor="middle">Escalation</text>
         <text class="sm" x="630" y="148" text-anchor="middle">secondary + manager</text>
         <path class="edge dash" d="M625 71 V95 H500 V112"/>
         <text class="sm" x="540" y="90" text-anchor="middle">ACK reply cancels deadline</text>
       </svg>
+      </div>
       <table class="pvd">
         <thead><tr><th></th><th>In this demo</th><th>In production</th></tr></thead>
         <tbody>
@@ -156,38 +189,38 @@
   </details>
 
   <div class="controls">
-    <select id="sev">
-      <option value="P1">P1 — Critical (data pipeline down)</option>
-      <option value="P2">P2 — High (elevated error rate)</option>
-      <option value="P3">P3 — Elevated (degraded ingestion)</option>
+    <select id="sev" aria-label="Alert severity">
+      <option value="P1">P1 · Critical (data pipeline down)</option>
+      <option value="P2">P2 · High (elevated error rate)</option>
+      <option value="P3">P3 · Elevated (degraded ingestion)</option>
     </select>
     <button class="btn primary" id="trigger">⚡ Trigger alert</button>
     <button class="btn warn" id="ack" disabled>✓ Acknowledge page</button>
     <button class="btn ghost" id="reset">Reset</button>
-    <span class="speed">Sim speed
+    <label class="speed">Sim speed
       <select id="speed">
         <option value="60">60× (15 min → 15 s)</option>
         <option value="180">180× (fast)</option>
         <option value="1">1× (real time)</option>
       </select>
-    </span>
+    </label>
   </div>
 
   <div class="grid">
     <div class="panel">
       <h2>Event Flow</h2>
       <div class="flow">
-        <div class="node" id="n1"><div class="ico">🪝</div><div><div class="t">Webhook received</div><div class="d" id="n1d">Waiting for an alert…</div></div></div>
+        <div class="node" id="n1"><div class="ico" aria-hidden="true">🪝</div><div><div class="t">Webhook received</div><div class="d" id="n1d">Waiting for an alert…</div></div></div>
         <div class="conn" id="c1"></div>
-        <div class="node" id="n2"><div class="ico">🗓️</div><div><div class="t">On-call lookup</div><div class="d" id="n2d">—</div></div></div>
+        <div class="node" id="n2"><div class="ico" aria-hidden="true">🗓️</div><div><div class="t">On-call lookup</div><div class="d" id="n2d">–</div></div></div>
         <div class="conn" id="c2"></div>
-        <div class="node" id="n3"><div class="ico">📲</div><div><div class="t">SMS page sent</div><div class="d" id="n3d">—</div></div></div>
+        <div class="node" id="n3"><div class="ico" aria-hidden="true">📲</div><div><div class="t">SMS page sent</div><div class="d" id="n3d">–</div></div></div>
         <div class="conn" id="c3"></div>
-        <div class="node" id="n4"><div class="ico">⏱️</div><div><div class="t">Ack timer armed (15 min)</div><div class="d" id="n4d">—</div></div></div>
+        <div class="node" id="n4"><div class="ico" aria-hidden="true">⏱️</div><div><div class="t">Ack timer armed (15 min)</div><div class="d" id="n4d">–</div></div></div>
         <div class="conn" id="c4"></div>
-        <div class="node" id="n5"><div class="ico">⚠️</div><div><div class="t">Escalation</div><div class="d" id="n5d">—</div></div></div>
+        <div class="node" id="n5"><div class="ico" aria-hidden="true">⚠️</div><div><div class="t">Escalation</div><div class="d" id="n5d">–</div></div></div>
       </div>
-      <div class="sms-preview" id="smsPrev">
+      <div class="sms-preview" id="smsPrev" role="status">
         <div class="hdr">📲 SMS to on-call</div>
         <div id="smsBody"></div>
       </div>
@@ -197,9 +230,9 @@
       <div class="panel" style="margin-bottom:20px">
         <h2>Ack Timer</h2>
         <div class="timerbox">
-          <div class="clock" id="clock">15:00</div>
-          <div class="ring"><i id="ring"></i></div>
-          <div class="statepill sp-idle" id="statepill">Idle</div>
+          <div class="clock" id="clock" role="timer" aria-label="Time remaining to acknowledge">15:00</div>
+          <div class="ring" aria-hidden="true"><i id="ring"></i></div>
+          <div class="statepill sp-idle" id="statepill" role="status" aria-live="polite">Idle</div>
         </div>
       </div>
       <div class="panel">
@@ -211,7 +244,7 @@
 
   <div class="panel" style="margin-top:20px">
     <h2>Event Log</h2>
-    <div class="log" id="log"><div class="l">System ready. Trigger an alert to begin.</div></div>
+    <div class="log" id="log" role="log" aria-live="polite"><div class="l">System ready. Trigger an alert to begin.</div></div>
   </div>
 
   <div class="foot">Sanitized portfolio demo · built by James L. Madison · no production data or credentials</div>
@@ -256,7 +289,7 @@ async function trigger(){
   $('smsPrev').classList.add('show');
   log('📲 SMS page sent to primary on-call','sms');
   await wait(700);setConn(3);setNode(4);
-  $('n4d').textContent='Counting down — acknowledge to stop';
+  $('n4d').textContent='Counting down; acknowledge to stop';
   log('⏱️ Ack timer armed: 15:00');
   startTimer();
 }
@@ -270,28 +303,28 @@ function startTimer(){
     updateClock();
   },1000/speed);
 }
-function updateClock(){$('clock').textContent=fmt(remaining);$('ring').style.width=(remaining/TOTAL*100)+'%';
-  $('ring').style.background=remaining/TOTAL>0.5?'var(--good)':remaining/TOTAL>0.25?'var(--warn)':'var(--bad)';}
+function updateClock(){$('clock').textContent=fmt(remaining);$('ring').style.transform=`scaleX(${remaining/TOTAL})`;
+  $('ring').style.background=remaining/TOTAL>0.5?'var(--live)':remaining/TOTAL>0.25?'var(--sim)':'var(--err)';}
 function ack(){
   if(state!=='armed')return;
   clearInterval(tickInt);setState('ack');
   $('ack').disabled=true;$('trigger').disabled=false;
   $('n4').classList.add('ok');$('n4d').textContent=`Acknowledged at ${fmt(TOTAL-remaining)} elapsed`;
-  log('✓ Page <b>acknowledged</b> by A. Rivera — timer stopped','ack');
+  log('✓ Page <b>acknowledged</b> by A. Rivera; timer stopped','ack');
 }
 function escalate(){
   setState('esc');setConn(4);setNode(5,'alert');
   $('n5d').textContent='Unacknowledged → paged Secondary + Manager';
   $('ack').disabled=true;$('trigger').disabled=false;
-  log('⚠️ <b>No ack in 15:00</b> — escalating','esc');
+  log('⚠️ <b>No ack in 15:00</b>. Escalating.','esc');
   log('📲 SMS page sent to <b>K. Osei</b> (secondary) + On-call Manager','esc');
 }
 function reset(soft){
   clearInterval(tickInt);remaining=TOTAL;setState('idle');updateClock();$('clock').textContent='15:00';
   for(let i=1;i<=5;i++){$('n'+i).classList.remove('on','alert','ok');if(i<5)$('c'+i).classList.remove('on');}
-  ['n2d','n3d','n4d','n5d'].forEach(id=>$(id).textContent='—');$('n1d').textContent='Waiting for an alert…';
+  ['n2d','n3d','n4d','n5d'].forEach(id=>$(id).textContent='–');$('n1d').textContent='Waiting for an alert…';
   $('smsPrev').classList.remove('show');$('trigger').disabled=false;$('ack').disabled=true;
-  if(!soft){$('log').innerHTML='<div class="l">System reset. Trigger an alert to begin.</div>';}
+  if(!soft){$('log').innerHTML='<div class="l">System ready. Trigger an alert to begin.</div>';}
 }
 function rand(){return Math.floor(1000+Math.random()*9000);}
 function wait(ms){return new Promise(r=>setTimeout(r,ms/Math.max(1,+$('speed').value/60)));}

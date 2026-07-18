@@ -20,27 +20,26 @@
   body::before { content: ""; position: fixed; inset: 0; pointer-events: none;
     background: repeating-linear-gradient(0deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 3px),
     radial-gradient(120% 90% at 50% 0%, rgba(111,179,255,0.05), transparent 55%); z-index: 0; }
-  .wrap { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 0 28px 80px; }
+  .wrap { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; padding: 0 28px 80px; }
   a { color: inherit; }
   a:focus-visible { outline: 2px solid var(--note); outline-offset: 3px; border-radius: 2px; }
-  header { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
     padding: 22px 0; border-bottom: 1px solid var(--line);
     font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; }
-  .crumb { color: var(--text-dim); text-decoration: none; }
+  .crumb { color: var(--text-dim); text-decoration: none; white-space: nowrap; }
   .crumb b { color: var(--head); font-weight: 600; }
   .crumb:hover b { color: var(--note); }
-  .badge { font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em;
+  .badge { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
     text-transform: uppercase; padding: 4px 9px; border-radius: 4px; color: var(--note); background: var(--note-dim); }
   .title { padding: 56px 0 8px; }
   h1 { font-weight: 500; font-size: clamp(1.7rem, 4.4vw, 2.6rem); line-height: 1.18; color: var(--head); margin-top: 18px; text-wrap: balance; }
   .meta { display: flex; flex-wrap: wrap; gap: 7px; margin: 22px 0 8px; }
   .chip { font-family: var(--mono); font-size: 11px; color: var(--text-dim); border: 1px solid var(--line); padding: 3px 9px; border-radius: 99px; letter-spacing: 0.03em; }
-  h2 { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--head); margin: 44px 0 14px; }
-  h2::after { content: ""; display: block; width: 36px; height: 2px; margin-top: 10px; background: var(--note); }
+  h2 { font-family: var(--serif); font-size: 1.35rem; font-weight: 600; color: var(--head); margin: 44px 0 14px; text-wrap: balance; }
   p { margin: 14px 0; }
   p b { color: var(--head); font-weight: 600; }
-  .callout { border: 1px solid var(--line); border-left: 3px solid var(--note); background: var(--bg-raised); border-radius: 8px; padding: 18px 22px; margin: 22px 0; }
-  .callout .k { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--note); margin-bottom: 8px; }
+  .callout { border: 1px solid var(--line-bright); background: var(--bg-raised); border-radius: 8px; padding: 18px 22px; margin: 22px 0; }
+  .callout .k { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--note); margin-bottom: 8px; }
   .callout p { margin: 0; font-size: 1rem; }
   ul { margin: 14px 0 14px 22px; }
   li { margin: 7px 0; }

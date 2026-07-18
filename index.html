@@ -68,49 +68,56 @@
     border-radius: 2px;
   }
 
+  .skip {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 2;
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--bg-raised);
+    color: var(--head);
+    padding: 10px 14px;
+    border: 1px solid var(--line-bright);
+    border-radius: 4px;
+    text-decoration: none;
+  }
+  .skip:focus { left: 28px; top: 14px; }
+
   /* ---------- header bar ---------- */
   header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 10px 16px;
     padding: 22px 0;
     border-bottom: 1px solid var(--line);
     font-family: var(--mono);
     font-size: 13px;
     letter-spacing: 0.04em;
   }
-  .crumb { color: var(--text-dim); }
+  .crumb { color: var(--text-dim); white-space: nowrap; }
   .crumb b { color: var(--head); font-weight: 600; }
-  .header-links { display: flex; gap: 22px; }
+  .header-links { display: flex; flex-wrap: wrap; gap: 8px 22px; }
   .header-links a {
     color: var(--text-dim);
     text-decoration: none;
+    white-space: nowrap;
     transition: color 0.15s ease;
   }
   .header-links a:hover { color: var(--live); }
 
   /* ---------- hero ---------- */
   .hero { padding: 84px 0 56px; }
-  .eyebrow {
+  .intro {
     font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 0.22em;
-    color: var(--live);
-    text-transform: uppercase;
-    margin-bottom: 26px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: var(--text-dim);
+    margin-bottom: 24px;
   }
-  .eyebrow::before {
-    content: "";
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--live);
-    box-shadow: 0 0 0 0 rgba(61,220,132,0.5);
-    animation: pulse 2.4s ease-out infinite;
-  }
+  .intro b { color: var(--head); font-weight: 600; }
   @keyframes pulse {
     0%   { box-shadow: 0 0 0 0 rgba(61,220,132,0.45); }
     70%  { box-shadow: 0 0 0 9px rgba(61,220,132,0); }
@@ -134,69 +141,41 @@
   }
   .hero p.lede .dim { color: var(--text-dim); }
 
-  /* stat strip */
-  .stats {
-    margin-top: 52px;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    border: 1px solid var(--line);
-    background: var(--bg-inset);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .stat {
-    padding: 18px 20px 16px;
-    border-left: 1px solid var(--line);
-  }
-  .stat:first-child { border-left: none; }
-  .stat .n {
+  .contact-line {
+    margin-top: 18px;
     font-family: var(--mono);
-    font-size: 1.28rem;
-    color: var(--head);
-    letter-spacing: -0.01em;
-  }
-  .stat .n span { color: var(--live); }
-  .stat .l {
-    margin-top: 6px;
-    font-family: var(--mono);
-    font-size: 11.5px;
-    letter-spacing: 0.06em;
+    font-size: 13.5px;
     color: var(--text-dim);
-    text-transform: uppercase;
   }
+  .contact-line a { color: var(--live); text-decoration: none; }
+  .contact-line a:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+  /* operating numbers */
+  .numbers {
+    margin-top: 44px;
+    padding: 14px 0;
+    border-top: 1px dashed var(--line);
+    border-bottom: 1px dashed var(--line);
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: var(--text-dim);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 26px;
+  }
+  .numbers span { white-space: nowrap; }
+  .numbers b { color: var(--head); font-weight: 600; }
 
   /* ---------- tiers ---------- */
-  .tier {
-    margin-top: 92px;
-    display: grid;
-    grid-template-columns: 96px 1fr;
-    gap: 28px;
-  }
-  .tier-num {
-    font-family: var(--mono);
-    font-size: 60px;
-    line-height: 0.9;
-    color: transparent;
-    -webkit-text-stroke: 1px var(--line-bright);
-    user-select: none;
-    padding-top: 6px;
-  }
+  .tier { margin-top: 92px; }
   .tier-head { margin-bottom: 30px; }
   .tier-head h2 {
-    font-family: var(--mono);
-    font-size: 15px;
+    font-family: var(--serif);
+    font-size: 1.5rem;
     font-weight: 600;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
     color: var(--head);
-  }
-  .tier-head h2::after {
-    content: "";
-    display: block;
-    width: 44px;
-    height: 2px;
-    margin-top: 12px;
-    background: var(--tier-accent, var(--live));
+    text-wrap: balance;
   }
   .tier-head p {
     margin-top: 14px;
@@ -240,9 +219,9 @@
   }
   .badge {
     font-family: var(--mono);
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     padding: 4px 9px;
     border-radius: 4px;
@@ -268,10 +247,9 @@
   }
 
   .card h3 {
-    font-family: var(--mono);
-    font-size: 1.06rem;
+    font-family: var(--serif);
+    font-size: 1.24rem;
     font-weight: 600;
-    letter-spacing: 0.01em;
     color: var(--head);
   }
   .card p { font-size: 0.99rem; color: var(--text); }
@@ -306,19 +284,17 @@
   /* ---------- process band ---------- */
   .band {
     margin-top: 92px;
-    border: 1px solid var(--line);
-    border-left: 3px solid var(--live);
-    background: linear-gradient(90deg, rgba(61,220,132,0.05), transparent 45%);
+    border: 1px solid var(--line-bright);
+    background: rgba(61,220,132,0.045);
     border-radius: 10px;
     padding: 30px 34px;
   }
   .band h2 {
-    font-family: var(--mono);
-    font-size: 13px;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-    color: var(--live);
-    margin-bottom: 14px;
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--head);
+    margin-bottom: 12px;
   }
   .band p {
     max-width: 74ch;
@@ -339,9 +315,8 @@
   }
   footer h4 {
     font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.06em;
     color: var(--text);
     margin-bottom: 12px;
   }
@@ -370,64 +345,51 @@
 
   @media (prefers-reduced-motion: reduce) {
     .reveal { animation: none; opacity: 1; transform: none; }
-    .eyebrow::before, .badge.live::before { animation: none; }
+    .badge.live::before { animation: none; }
     html { scroll-behavior: auto; }
   }
 
   /* ---------- responsive ---------- */
   @media (max-width: 880px) {
-    .tier { grid-template-columns: 1fr; gap: 10px; }
-    .tier-num { font-size: 40px; padding: 0; }
-    .stats { grid-template-columns: repeat(2, 1fr); }
-    .stat:nth-child(3) { border-left: none; }
-    .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
     .card, .card.span7, .card.span5, .card.span4 { grid-column: span 12; }
     .hero { padding: 60px 0 40px; }
+    .numbers { flex-direction: column; gap: 8px; }
     footer { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <a class="skip" href="#main">Skip to content</a>
 
   <header>
     <span class="crumb"><b>jmadison</b> / portfolio</span>
-    <nav class="header-links" aria-label="Profiles">
+    <nav class="header-links" aria-label="Profiles and contact">
+      <a href="mailto:mr.madison@gmail.com">Email</a>
       <a href="https://www.linkedin.com/in/jlm-madison" rel="noopener">LinkedIn ↗</a>
       <a href="https://github.com/mrmadison14" rel="noopener">GitHub ↗</a>
     </nav>
   </header>
 
+  <main id="main">
   <section class="hero">
-    <p class="eyebrow reveal d1">James L. Madison · Support Team Manager · Fleet-Telematics SaaS</p>
+    <p class="intro reveal d1"><b>James L. Madison</b> · support team manager, fleet-telematics SaaS</p>
     <h1 class="reveal d2">I run a support team, and I build the <em>systems</em> that make it fast.</h1>
     <p class="lede reveal d3">
       AI-assisted triage, on-call paging, ticket routing, order automation.
       <span class="dim">Everything on this page is either running in production right now, or an honest clean-room rebuild of something that is.</span>
     </p>
+    <p class="contact-line reveal d3">Hiring for support systems? <a href="mailto:mr.madison@gmail.com">mr.madison@gmail.com</a></p>
 
-    <div class="stats reveal d4" role="list" aria-label="Operating numbers">
-      <div class="stat" role="listitem">
-        <div class="n">120–250<span>/wk</span></div>
-        <div class="l">tickets auto-routed</div>
-      </div>
-      <div class="stat" role="listitem">
-        <div class="n">&lt;15<span> min</span></div>
-        <div class="l">paging ack, enforced by escalation</div>
-      </div>
-      <div class="stat" role="listitem">
-        <div class="n">5 <span>people</span> · 8 <span>brands</span></div>
-        <div class="l">support org scope</div>
-      </div>
-      <div class="stat" role="listitem">
-        <div class="n">4<span> services</span></div>
-        <div class="l">production tools shipped</div>
-      </div>
-    </div>
+    <p class="numbers reveal d4" aria-label="Operating numbers">
+      <span><b>120–250/wk</b> tickets auto-routed</span>
+      <span><b>&lt;15 min</b> paging ack, escalation-enforced</span>
+      <span><b>5 people · 8 brands</b> supported</span>
+      <span><b>4 services</b> in production</span>
+    </p>
   </section>
 
   <section class="tier t-live reveal d5" style="--tier-accent: var(--live)" aria-labelledby="t1">
-    <div class="tier-num" aria-hidden="true">01</div>
     <div>
       <div class="tier-head">
         <h2 id="t1">Running in production</h2>
@@ -440,7 +402,8 @@
             <span class="badge-meta">every 5 min since Jun 2026</span>
           </div>
           <h3>TCG Restock Watcher</h3>
-          <p>An autonomous monitoring and deal-detection service. Polls 20 storefronts every five minutes from free CI infrastructure, diffs against committed state snapshots, classifies restocks, preorders and price drops against a ~3,400-product market-price index, and alerts Discord with rate-limit-aware delivery. <span class="hard">When parallel runs raced and 38% of state pushes failed, I rebuilt the commit step to reconcile and retry. Failures went to zero.</span></p>
+          <p>An autonomous monitoring and deal-detection service: polls 20 storefronts every five minutes from free CI infrastructure, diffs against committed state snapshots, and classifies restocks, preorders and price drops against a ~3,400-product market-price index before alerting Discord.</p>
+          <p><span class="hard">When parallel runs raced and 38% of state pushes failed, I rebuilt the commit step to reconcile and retry. Failures went to zero.</span></p>
           <div class="tags">
             <span class="tag">Python</span><span class="tag">GitHub Actions</span><span class="tag">CI/CD</span><span class="tag">alerting</span><span class="tag">reliability</span>
           </div>
@@ -464,11 +427,10 @@
   </section>
 
   <section class="tier t-sim" style="--tier-accent: var(--sim)" aria-labelledby="t2">
-    <div class="tier-num" aria-hidden="true">02</div>
     <div>
       <div class="tier-head">
         <h2 id="t2">Clean-room demos</h2>
-        <p>My production work is proprietary, so these are faithful rebuilds: real architecture, a fictional company (Meridian Fleet Systems), fake data. Each demo runs entirely in your browser and says plainly what the production version does that the simulation doesn't. The two backend services are also published as runnable code with their test suites.</p>
+        <p>My production work is proprietary, so these are faithful rebuilds: real architecture, a fictional company, fake data. Each one says plainly what the production version does that the simulation doesn't, and the two backend services are published as runnable code with their test suites.</p>
       </div>
       <div class="grid">
         <article class="card">
@@ -518,7 +480,6 @@
   </section>
 
   <section class="tier t-note" style="--tier-accent: var(--note)" aria-labelledby="t3">
-    <div class="tier-num" aria-hidden="true">03</div>
     <div>
       <div class="tier-head">
         <h2 id="t3">Field notes</h2>
@@ -552,10 +513,12 @@
     </div>
   </section>
 
+  </main>
+
   <footer>
     <div>
       <h4>Provenance</h4>
-      <p>Tier 01 links to real systems running today. Tier 02 demos are clean-room rebuilds of proprietary production work, using a fictional company and fake data. Tier 03 stories are true, with identifying details removed. Nothing proprietary appears on this site.</p>
+      <p>The production section links to real systems running today. The demos are clean-room rebuilds of proprietary work, using a fictional company and fake data. The field notes are true, with identifying details removed. Nothing proprietary appears on this site.</p>
     </div>
     <div>
       <h4>Colophon</h4>
@@ -563,8 +526,9 @@
     </div>
     <div class="colophon-meta">
       <span>© 2026 James L. Madison</span>
+      <span><a href="mailto:mr.madison@gmail.com">mr.madison@gmail.com</a></span>
       <span><a href="https://www.linkedin.com/in/jlm-madison" rel="noopener">linkedin.com/in/jlm-madison</a></span>
-      <span>updated 2026-07-01 · v1.2</span>
+      <span>updated 2026-07-17 · v2.0</span>
     </div>
   </footer>
 
