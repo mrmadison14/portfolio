@@ -221,36 +221,43 @@
       <div class="saved" id="savedAddrs"></div>
       <form id="shipForm" novalidate>
         <div class="formgrid">
+          <!-- Each input is associated with its own error container via
+               aria-describedby, so a screen reader reads the message when the
+               field is focused. role="alert" on the container announces the
+               message the moment validation writes it. validateField() also sets
+               aria-invalid. Previously validation only toggled CSS classes, so
+               none of this reached assistive tech despite the landing page
+               advertising the flow as screen-reader friendly. -->
           <div class="full">
             <label for="f_name">Recipient / Fleet contact *</label>
-            <input type="text" id="f_name" autocomplete="name" aria-required="true">
-            <div class="err" id="e_name"></div>
+            <input type="text" id="f_name" autocomplete="name" aria-required="true" aria-describedby="e_name">
+            <div class="err" id="e_name" role="alert"></div>
           </div>
           <div class="full">
             <label for="f_street">Street address *</label>
-            <input type="text" id="f_street" autocomplete="address-line1" aria-required="true">
-            <div class="err" id="e_street"></div>
+            <input type="text" id="f_street" autocomplete="address-line1" aria-required="true" aria-describedby="e_street">
+            <div class="err" id="e_street" role="alert"></div>
           </div>
           <div>
             <label for="f_city">City *</label>
-            <input type="text" id="f_city" autocomplete="address-level2" aria-required="true">
-            <div class="err" id="e_city"></div>
+            <input type="text" id="f_city" autocomplete="address-level2" aria-required="true" aria-describedby="e_city">
+            <div class="err" id="e_city" role="alert"></div>
           </div>
           <div>
             <label for="f_state">State *</label>
-            <select id="f_state" aria-required="true"><option value="">Select…</option></select>
-            <div class="err" id="e_state"></div>
+            <select id="f_state" aria-required="true" aria-describedby="e_state"><option value="">Select…</option></select>
+            <div class="err" id="e_state" role="alert"></div>
           </div>
           <div>
             <label for="f_zip">ZIP code *</label>
-            <input type="text" id="f_zip" inputmode="numeric" autocomplete="postal-code" aria-required="true" maxlength="10">
-            <div class="err" id="e_zip"></div>
-            <div class="hint">Simulated USPS-style validation (5 or 5+4 digits)</div>
+            <input type="text" id="f_zip" inputmode="numeric" autocomplete="postal-code" aria-required="true" aria-describedby="e_zip h_zip" maxlength="10">
+            <div class="err" id="e_zip" role="alert"></div>
+            <div class="hint" id="h_zip">Simulated USPS-style validation (5 or 5+4 digits)</div>
           </div>
           <div>
             <label for="f_phone">Phone *</label>
-            <input type="text" id="f_phone" inputmode="tel" autocomplete="tel" aria-required="true">
-            <div class="err" id="e_phone"></div>
+            <input type="text" id="f_phone" inputmode="tel" autocomplete="tel" aria-required="true" aria-describedby="e_phone">
+            <div class="err" id="e_phone" role="alert"></div>
           </div>
         </div>
       </form>
@@ -374,11 +381,26 @@ function validateField(id){
   const el=document.getElementById(id),err=document.getElementById('e_'+id.slice(2)),f=FIELDS[id];
   const ok=f.test(el.value);
   el.classList.toggle('invalid',!ok);el.classList.toggle('valid',ok&&el.value!=='');
-  err.textContent=ok?'':f.msg;return ok;
+  err.textContent=ok?'':f.msg;
+  // The visual state was carried entirely by CSS classes, which assistive tech
+  // cannot see. aria-invalid is the programmatic half of the same signal.
+  el.setAttribute('aria-invalid',ok?'false':'true');
+  return ok;
 }
 Object.keys(FIELDS).forEach(id=>{document.getElementById(id).addEventListener('blur',()=>validateField(id));document.getElementById(id).addEventListener('input',()=>{const el=document.getElementById(id);if(el.classList.contains('invalid'))validateField(id);});});
 function clearErrors(){Object.keys(FIELDS).forEach(id=>{document.getElementById(id).classList.remove('invalid','valid');document.getElementById('e_'+id.slice(2)).textContent='';});}
-function validateAll(){let ok=true,first=null;Object.keys(FIELDS).forEach(id=>{if(!validateField(id)){ok=false;if(!first)first=id;}});if(first)document.getElementById(first).focus();return ok;}
+function validateAll(){
+  let ok=true,first=null,bad=0;
+  Object.keys(FIELDS).forEach(id=>{if(!validateField(id)){ok=false;bad++;if(!first)first=id;}});
+  if(first){
+    // Announce the summary before moving focus, so a screen-reader user learns
+    // how many fields failed rather than just landing on one of them.
+    document.getElementById('live').textContent =
+      bad+(bad===1?' field needs':' fields need')+' attention. Moving to '+FIELDS[first].label+'.';
+    document.getElementById(first).focus();
+  }
+  return ok;
+}
 
 /* ---------- Review ---------- */
 function renderReview(){
@@ -386,7 +408,18 @@ function renderReview(){
   document.getElementById('reviewBody').innerHTML=items.map(i=>`<tr><td>${i.name}</td><td class="r">${i.qty}</td><td class="r">$${i.sub.toFixed(2)}</td></tr>`).join('');
   const total=items.reduce((a,b)=>a+b.sub,0);
   document.getElementById('reviewFoot').innerHTML=`<tr class="totrow"><td colspan="2" class="r">Order total</td><td class="r">$${total.toFixed(2)}</td></tr>`;
-  document.getElementById('reviewAddr').innerHTML=`${shipping.name}<br>${shipping.street}<br>${shipping.city}, ${shipping.state} ${shipping.zip}<br>${shipping.phone}`;
+  /* Built with text nodes, not innerHTML. These four values are typed by the
+     visitor, so interpolating them into markup was a live self-XSS sink: typing
+     <img src=x onerror=alert(1)> as the recipient name executed it. Trivial for a
+     reviewer to demonstrate on a page whose sibling copy sells "security
+     hardening". One div per line preserves the previous <br> layout. */
+  const addr=document.getElementById('reviewAddr');
+  addr.textContent='';
+  [ shipping.name,
+    shipping.street,
+    shipping.city+', '+shipping.state+' '+shipping.zip,
+    shipping.phone
+  ].forEach(line=>{ const d=document.createElement('div'); d.textContent=line; addr.appendChild(d); });
 }
 
 /* ---------- Navigation ---------- */
@@ -396,7 +429,18 @@ function goto(n){
     const st=document.getElementById('st'+i);st.classList.toggle('active',i===n);st.classList.toggle('done',i<n);
   }
   document.getElementById('live').textContent='Step '+n+' of 5';
-  window.scrollTo({top:0,behavior:'smooth'});
+
+  /* Move focus into the new screen. Without this, focus stayed on the button
+     that was just hidden by display:none, which drops the caret to <body> and
+     loses a keyboard or screen-reader user's place entirely. Headings are not
+     focusable by default, hence tabindex="-1"; preventScroll keeps our own
+     scroll call below in charge. */
+  const heading=document.getElementById('h'+n+'c');
+  if(heading){ heading.setAttribute('tabindex','-1'); heading.focus({preventScroll:true}); }
+
+  // Honour prefers-reduced-motion: a JS smooth scroll ignores the CSS media query.
+  const reduce=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollTo({top:0,behavior:reduce?'auto':'smooth'});
 }
 document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>goto(+b.dataset.goto));
 document.getElementById('toCart').onclick=()=>{renderCart();goto(2);};
