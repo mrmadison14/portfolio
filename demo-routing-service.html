@@ -51,8 +51,10 @@
   .panel h2 .hint{font-family:var(--mono);font-weight:400;font-size:.72rem;color:var(--text-dim);letter-spacing:.03em}
   /* rules */
   .rules{padding:12px 14px;font-family:var(--mono)}
-  .rule{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:9px;background:var(--bg-inset);font-size:.78rem;display:flex;gap:10px;align-items:flex-start;transition:opacity .2s ease,border-color .2s ease,box-shadow .2s ease}
-  .rule.off{opacity:.4}
+  .rule{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:9px;background:var(--bg-inset);font-size:.78rem;display:flex;gap:10px;align-items:flex-start;transition:background .2s ease,border-color .2s ease,box-shadow .2s ease}
+  /* Disabled state is a dashed border + recessed background, not faded text.
+     opacity:.4 put this rule's text at 1.87:1; no opacity below 0.89 clears AA. */
+  .rule.off{background:var(--bg);border-style:dashed}
   .rule.firing{border-color:var(--sim);box-shadow:0 0 0 1px var(--sim) inset}
   .rule .tog{flex:none;margin-top:2px;accent-color:var(--sim)}
   .rule .cond{font-size:.74rem;color:var(--sim)}
@@ -229,11 +231,17 @@ const legend=document.getElementById('legend');
 [...new Set(RULES.map(r=>r.chan))].forEach(c=>{const s=document.createElement('span');s.className='lp';s.textContent=c;legend.appendChild(s);});
 function updateRuleCount(){document.getElementById('stRules').textContent=RULES.filter(r=>r.on).length;}
 
-/* routing logic: first active rule whose test passes */
+/* Routing logic: the first ACTIVE rule whose test passes, or null when nothing
+   matches. The previous version ended with `return RULES[RULES.length-1]`
+   unconditionally, so switching the "Default catch-all" off still routed every
+   ticket through it — the exact interaction this demo exists to show. */
 function route(t){
   for(const r of RULES){ if(r.on && r.test(t)) return r; }
-  return RULES[RULES.length-1]; // safety net
+  return null;
 }
+/* Shown when every matching rule is disabled. Mirrors a real triage queue:
+   nothing silently absorbs the ticket, it lands somewhere visible. */
+const UNROUTED={id:'none',label:'no active rule matched',chan:'(unrouted)',color:'var(--err)'};
 const AGENTS=["A. Rivera","K. Osei","M. Lind","T. Cho","S. Patel"];
 
 let total=0;
@@ -249,7 +257,7 @@ function makeTicket(){
 function emit(){
   if(total===0)feed.innerHTML='';
   const t=makeTicket();
-  const r=route(t);
+  const r=route(t)||UNROUTED;
   total++;
   document.getElementById('stTotal').textContent=total;
   // flash firing rule

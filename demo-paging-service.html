@@ -58,8 +58,12 @@
   .panel h2{font-family:var(--serif);font-size:1.05rem;font-weight:600;color:var(--head);margin:0;padding:13px 16px;border-bottom:1px solid var(--line)}
   /* pipeline */
   .flow{padding:18px}
-  .node{display:flex;gap:13px;padding:14px;border:1px solid var(--line);border-radius:6px;margin-bottom:0;background:var(--bg-inset);opacity:.35;transition:opacity .4s ease,border-color .4s ease,box-shadow .4s ease}
-  .node.on{opacity:1;border-color:var(--sim)}
+  /* Inactive state is carried by border + background, NOT by fading the text.
+     opacity:.35 put the .d text at 1.70:1 against --bg-inset; the lowest opacity
+     that clears AA is 0.89, which is indistinguishable from 1. */
+  .node{display:flex;gap:13px;padding:14px;border:1px solid var(--line);border-radius:6px;margin-bottom:0;background:var(--bg-inset);transition:background .4s ease,border-color .4s ease,box-shadow .4s ease}
+  .node.on{border-color:var(--sim);background:var(--bg-raised);box-shadow:0 0 0 1px var(--sim) inset}
+  .node:not(.on):not(.alert):not(.ok) .ico{opacity:.5}
   .node.alert{border-color:var(--err);box-shadow:0 0 0 1px var(--err) inset}
   .node.ok{border-color:var(--live)}
   .node .ico{width:34px;height:34px;border-radius:6px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;font-size:16px;flex:none}
@@ -261,6 +265,12 @@ ROSTER.forEach(r=>{const d=document.createElement('div');d.className='row';d.inn
 
 const TOTAL=15*60; // seconds
 let remaining=TOTAL, tickInt=null, state='idle';
+/* Generation token. trigger() is async and awaits between stages, so without
+   this a Reset (or a second Trigger) mid-sequence left the first run alive: it
+   resumed past its next await, repopulated the nodes it had just cleared, and
+   armed the countdown — a "reset" alert resurrecting itself. Every await in
+   trigger() now bails if its generation is stale. */
+let gen=0;
 const $=id=>document.getElementById(id);
 function now(){return new Date().toLocaleTimeString('en-US',{hour12:false});}
 function log(msg,cls=''){const d=document.createElement('div');d.className='l '+cls;d.innerHTML=`<span class="ts">${now()}</span> ${msg}`;const L=$('log');L.appendChild(d);L.scrollTop=L.scrollHeight;}
@@ -275,20 +285,21 @@ function fmt(s){const m=Math.floor(s/60),ss=s%60;return `${String(m).padStart(2,
 
 async function trigger(){
   reset(true);
+  const myGen=gen; // reset() bumped gen, so any earlier run now bails out
   const sev=$('sev').value;
   const ids={P1:"INC-"+rand(),P2:"INC-"+rand(),P3:"INC-"+rand()}[sev];
   $('trigger').disabled=true;$('ack').disabled=false;
   log(`<b>${sev}</b> alert received via webhook · ${ids}`,'');
   setNode(1);$('n1d').textContent=`${sev} · ${ids} · HMAC signature verified ✓`;
-  await wait(700);setConn(1);setNode(2);
+  await wait(700); if(myGen!==gen) return; setConn(1);setNode(2);
   $('n2d').textContent='Primary on-call: A. Rivera';
   log('Resolved on-call schedule → <b>A. Rivera</b> (primary)');
-  await wait(700);setConn(2);setNode(3);
+  await wait(700); if(myGen!==gen) return; setConn(2);setNode(3);
   $('n3d').textContent='Delivered to A. Rivera';
   $('smsBody').innerHTML=`<b>[Meridian Paging]</b> ${sev} ${ids}<br>${sevText(sev)}<br>Reply ACK within 15m or this escalates.`;
   $('smsPrev').classList.add('show');
   log('📲 SMS page sent to primary on-call','sms');
-  await wait(700);setConn(3);setNode(4);
+  await wait(700); if(myGen!==gen) return; setConn(3);setNode(4);
   $('n4d').textContent='Counting down; acknowledge to stop';
   log('⏱️ Ack timer armed: 15:00');
   startTimer();
@@ -320,6 +331,7 @@ function escalate(){
   log('📲 SMS page sent to <b>K. Osei</b> (secondary) + On-call Manager','esc');
 }
 function reset(soft){
+  gen++; // invalidate any trigger() run still sitting on an await
   clearInterval(tickInt);remaining=TOTAL;setState('idle');updateClock();$('clock').textContent='15:00';
   for(let i=1;i<=5;i++){$('n'+i).classList.remove('on','alert','ok');if(i<5)$('c'+i).classList.remove('on');}
   ['n2d','n3d','n4d','n5d'].forEach(id=>$(id).textContent='–');$('n1d').textContent='Waiting for an alert…';

@@ -58,8 +58,13 @@
   a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--sim);outline-offset:2px}
   /* routing side panel */
   .route{padding:16px}
-  .stage{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;background:var(--bg-inset);opacity:.4;transition:opacity .35s,border-color .35s}
-  .stage.on{opacity:1;border-color:var(--sim)}
+  /* Inactive state is carried by border + background, NOT by fading the text.
+     opacity:.4 put the .d description text at 1.87:1 against --bg-inset, and the
+     lowest opacity that still clears AA is 0.89 — visually identical to 1, so
+     opacity simply cannot express this state accessibly. */
+  .stage{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;background:var(--bg-inset);transition:background .35s,border-color .35s,box-shadow .35s}
+  .stage.on{border-color:var(--sim);background:var(--bg-raised);box-shadow:0 0 0 1px var(--sim) inset}
+  .stage:not(.on) .ico{opacity:.5}
   .stage .ico{width:30px;height:30px;border-radius:6px;background:var(--bg);display:grid;place-items:center;flex:none;font-size:15px}
   .stage .t{font-family:var(--mono);font-size:.82rem;font-weight:600;color:var(--head)}
   .stage .d{font-family:var(--mono);font-size:.74rem;color:var(--text-dim);margin-top:2px}
@@ -266,8 +271,15 @@ function classify(text){
   }
   let best=null,bestScore=0,total=0;
   for(const id in scores){ total+=scores[id]; if(scores[id]>bestScore){bestScore=scores[id];best=id;} }
-  // confidence: best share of total, scaled; min floor when something matched
-  let conf = total>0 ? Math.min(0.98, 0.45 + (bestScore/Math.max(total,1))*0.55) : 0;
+  // Confidence maps the winner's SHARE of total score into a usable band.
+  // The old band (0.45 + share*0.55) had a floor of 0.56 for ANY positive score
+  // — even a 5-way tie scored 0.56 — which made the `conf < 0.55` low-confidence
+  // branch below unreachable dead code. This band puts a 2-way tie at ~0.53, so
+  // a genuinely ambiguous message now takes the clarifying-question path.
+  //   one clear match (share 1.00) -> 0.95
+  //   two-way tie   (share 0.50)   -> 0.53   <- low confidence
+  //   three-way tie (share 0.33)   -> 0.38   <- low confidence
+  let conf = total>0 ? Math.min(0.97, 0.10 + (bestScore/Math.max(total,1))*0.85) : 0;
   if(bestScore===0){ return {id:"fallback",conf:0,hits:[],agent:FALLBACK}; }
   return {id:best,conf,hits:hits[best],agent:AGENTS[best]};
 }
