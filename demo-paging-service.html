@@ -65,7 +65,10 @@
   .node.on{border-color:var(--sim);background:var(--bg-raised);box-shadow:0 0 0 1px var(--sim) inset}
   .node:not(.on):not(.alert):not(.ok) .ico{opacity:.5}
   .node.alert{border-color:var(--err);box-shadow:0 0 0 1px var(--err) inset}
-  .node.ok{border-color:var(--live)}
+  /* Must override .node.on's amber inset, or an acknowledged node shows a green
+     border with a conflicting warning-coloured inner ring. .node.alert already
+     overrides it; .node.ok previously did not. */
+  .node.ok{border-color:var(--live);box-shadow:0 0 0 1px var(--live) inset}
   .node .ico{width:34px;height:34px;border-radius:6px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;font-size:16px;flex:none}
   .node .t{font-size:.95rem;font-weight:600;color:var(--head)}
   .node .d{font-family:var(--mono);font-size:.75rem;color:var(--text-dim);margin-top:3px}

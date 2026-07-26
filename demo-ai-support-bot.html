@@ -340,7 +340,10 @@ async function handle(){
   setStage(2,true,'Top intent: <b style="color:'+r.agent.color+'">'+r.agent.name+'</b> · '+pct+'% confidence<br>'+kwHtml);
   document.getElementById('conf').style.transform='scaleX('+(pct/100)+')';
   await wait(650);
-  if(r.conf>0 && r.conf<0.55){
+  /* Threshold on the SAME integer the UI displays. Comparing the raw float
+     against 0.55 while showing Math.round(conf*100) meant conf=0.5474 rendered
+     as "55% confidence" directly above the words "Low confidence". */
+  if(pct>0 && pct<55){
     setStage(3,true,'Low confidence: would ask 1 clarifying question');
   }else{
     setStage(3,true,'→ '+r.agent.name);

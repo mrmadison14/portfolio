@@ -227,8 +227,12 @@ function renderRules(){
   });
 }
 renderRules();
+/* Destination shown when every matching rule is disabled. A real triage queue
+   does not let a ticket vanish, so it must be visible and clearly NOT routed. */
+const UNROUTED={id:'none',label:'no active rule matched',chan:'unassigned — needs triage',color:'var(--err)'};
+
 const legend=document.getElementById('legend');
-[...new Set(RULES.map(r=>r.chan))].forEach(c=>{const s=document.createElement('span');s.className='lp';s.textContent=c;legend.appendChild(s);});
+[...new Set(RULES.map(r=>r.chan)),UNROUTED.chan].forEach(c=>{const s=document.createElement('span');s.className='lp';s.textContent=c;legend.appendChild(s);});
 function updateRuleCount(){document.getElementById('stRules').textContent=RULES.filter(r=>r.on).length;}
 
 /* Routing logic: the first ACTIVE rule whose test passes, or null when nothing
@@ -239,9 +243,6 @@ function route(t){
   for(const r of RULES){ if(r.on && r.test(t)) return r; }
   return null;
 }
-/* Shown when every matching rule is disabled. Mirrors a real triage queue:
-   nothing silently absorbs the ticket, it lands somewhere visible. */
-const UNROUTED={id:'none',label:'no active rule matched',chan:'(unrouted)',color:'var(--err)'};
 const AGENTS=["A. Rivera","K. Osei","M. Lind","T. Cho","S. Patel"];
 
 let total=0;
@@ -255,26 +256,34 @@ function makeTicket(){
   return t;
 }
 function emit(){
-  if(total===0)feed.innerHTML='';
+  /* `seen` clears the empty state and drives the rate; `total` counts only
+     tickets that were actually ROUTED, because the stat is labelled "routed".
+     Counting unrouted tickets there (and assigning them a random agent) claimed
+     a ticket had been handled when no active rule matched it. */
+  if(seen===0)feed.innerHTML='';
+  seen++;
   const t=makeTicket();
-  const r=route(t)||UNROUTED;
-  total++;
-  document.getElementById('stTotal').textContent=total;
-  // flash firing rule
+  const matched=route(t);
+  const r=matched||UNROUTED;
+  if(matched){ total++; document.getElementById('stTotal').textContent=total; }
+  // flash the firing rule (the unrouted sentinel has no rule element)
   const rr=document.getElementById('rule_'+r.id);if(rr){rr.classList.add('firing');setTimeout(()=>rr.classList.remove('firing'),600);}
-  const agent=AGENTS[Math.floor(Math.random()*AGENTS.length)];
+  // Only a routed ticket gets an assignee. An unrouted one is explicitly unassigned.
+  const dest = matched
+    ? `<div class="routed"><span>→ routed to</span> <span class="chan" style="color:${r.color}">${r.chan}</span> <span class="tag">@${AGENTS[Math.floor(Math.random()*AGENTS.length)]}</span></div>`
+    : `<div class="routed"><span>⚠ not routed</span> <span class="chan" style="color:${r.color}">${r.chan}</span></div>`;
   const el=document.createElement('div');el.className='ticket';
   el.innerHTML=`<div class="head"><span class="id">${t.id}</span><span class="pri ${t.priority}">${t.priority}</span></div>
     <div class="subj">${t.subject}</div>
     <div style="margin-bottom:6px"><span class="tag">product: ${t.product}</span></div>
     <div class="hmac">✓ HMAC-SHA256 signature verified</div>
-    <div class="routed"><span>→ routed to</span> <span class="chan" style="color:${r.color}">${r.chan}</span> <span class="tag">@${agent}</span></div>
-    <div class="matched">matched: ${r.label}</div>`;
+    ${dest}
+    <div class="matched">${matched?'matched: '+r.label:r.label}</div>`;
   feed.insertBefore(el,feed.firstChild);
   while(feed.children.length>30)feed.removeChild(feed.lastChild);
 }
 
-let stream=null, count=0, windowStart=Date.now();
+let stream=null, count=0, seen=0, windowStart=Date.now();
 document.getElementById('one').onclick=emit;
 document.getElementById('play').onclick=function(){
   if(stream){clearInterval(stream);stream=null;this.textContent='Start stream';return;}
@@ -283,7 +292,7 @@ document.getElementById('play').onclick=function(){
     const mins=(Date.now()-windowStart)/60000;document.getElementById('stRate').textContent=mins>0?Math.round(count/mins):count;
   },900);
 };
-document.getElementById('clear').onclick=()=>{total=0;count=0;windowStart=Date.now();document.getElementById('stTotal').textContent='0';document.getElementById('stRate').textContent='0';feed.innerHTML='<div class="empty">Cleared. Press <b>Start stream</b> or <b>+1 ticket</b>.</div>';};
+document.getElementById('clear').onclick=()=>{total=0;count=0;seen=0;windowStart=Date.now();document.getElementById('stTotal').textContent='0';document.getElementById('stRate').textContent='0';feed.innerHTML='<div class="empty">Cleared. Press <b>Start stream</b> or <b>+1 ticket</b>.</div>';};
 updateRuleCount();
 </script>
 </body>
